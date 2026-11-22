@@ -34,7 +34,7 @@ Folder data SAMA dengan versi Electron (`%APPDATA%\ChatStream Labs`), jadi penga
 | **Belum:** opsi "Abaikan versi ini" pada dialog update | |
 
 ## Build
-Push ke cabang `tauri` -> Actions > "Build Tauri" -> Artifacts: installer `.exe`.
+Push tag `v<versi>` (mis. `git tag v1.1.8 && git push origin v1.1.8`) -> Actions > "Build Tauri" -> otomatis jadi Release **pra-rilis** "ChatStream Labs v<versi>" berisi installer `.exe` saja (sejak v1.1.8; tidak ada artifact).
 Lokal (butuh Rust, Node 22): `node scripts/build-tauri.js`, taruh `node.exe` di
 `src-tauri/binaries/node-x86_64-pc-windows-msvc.exe`, lalu `cd shell && npx @tauri-apps/cli@2 build`.
 

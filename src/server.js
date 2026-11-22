@@ -173,7 +173,7 @@ const srv=http.createServer((req,res)=>{
     // alert hadiah TikTok: dock meneruskan datanya, main.js memunculkannya di jendela alert di luar jendela chat
     if(u.pathname==='/galert')return body(({m})=>{if(!m||typeof m!=='object'||!hooks.galert)return;
       const t=(v,n)=>typeof v==='string'?v.slice(0,n):'';
-      hooks.galert({kind:'gift',name:t(m.name,60),gift:t(m.gift,60),n:Math.max(1,Math.min(99999,Number(m.n)||1)),others:Math.max(0,Math.min(99999,Number(m.others)||0)),img:/^https?:\/\//i.test(m.img||'')?t(m.img,500):'',t:Number(m.t)||Date.now(),dur:Math.max(2,Math.min(60,Number(m.dur)||6)),max:Math.max(1,Math.min(10,Number(m.max)||3)),size:Math.max(50,Math.min(200,Number(m.size)||100)),order:m.order==='top'?'top':'bottom'});});
+      hooks.galert({kind:'gift',name:t(m.name,60),gift:t(m.gift,60),n:Math.max(1,Math.min(99999,Number(m.n)||1)),coins:Math.max(0,Math.min(1e9,Math.round(Number(m.coins)||0))),others:Math.max(0,Math.min(99999,Number(m.others)||0)),img:/^https?:\/\//i.test(m.img||'')?t(m.img,500):'',t:Number(m.t)||Date.now(),dur:Math.max(2,Math.min(60,Number(m.dur)||6)),max:Math.max(1,Math.min(10,Number(m.max)||3)),size:Math.max(50,Math.min(200,Number(m.size)||100)),order:m.order==='top'?'top':'bottom'});});
     if(u.pathname==='/analytics-new')return body(()=>{stats.end();syncSince();});
     if(u.pathname==='/analytics-del')return body(({id})=>stats.remove(String(id||'')));
     if(u.pathname==='/restart')return body(()=>{if(hooks.relaunch)setTimeout(()=>hooks.relaunch(),300);});

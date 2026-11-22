@@ -482,7 +482,7 @@ async function uiTests(){
     ok(/Ukuran chat/.test(pc)&&/Aktifkan alert/.test(pc)&&dom.window.eval("pendingChanges('p').length")===2&&dom.window.eval("pendingChanges('o').length")===0,'v15.4.0: perubahan belum diterapkan terdeteksi dan diberi nama (Ukuran chat, Aktifkan alert)');
     dom.window.eval("discardSec('p')");
     ok(dom.window.eval("pendingChanges('p').length")===0&&d.getElementById('dock_fsText').value==='16'&&d.getElementById('dock_ttGiftAl').checked===true,'v15.4.0: Buang mengembalikan kotak ke nilai tersimpan');});
-  await page('?view=dock',{},{ttAct:false},(d)=>{ok(d.querySelectorAll('.cs-act').length===0,'\"Tampilkan aktivitas\" dimatikan = tidak ada baris aktivitas');});
+  await page('?view=dock',{},{ttAct:false},(d)=>{ok(d.querySelectorAll('.cs-act').length>0,'v1.1.8: Monitor > TikTok tidak punya kotak \"Tampilkan aktivitas\" lagi; ttAct lama (false) diabaikan di Monitor');});
   await page('?view=dock',{},{joins:false},(d)=>{ok(!d.querySelector('.cs-join'),'pengaturan lama joins:false tetap dihormati');});
   await page('?view=dock',{},{ytSc:false},(d)=>{ok(!d.querySelector('.m.sc'),'Super Chat bisa disembunyikan');});
   await page('?view=dock',{},{ytScBg:'custom',ytScBgC:'#00ff00',ytScFcOn:true,ytScFc:'#123456',ytScAmt:false},(d)=>{const m=d.querySelector('.m.sc');

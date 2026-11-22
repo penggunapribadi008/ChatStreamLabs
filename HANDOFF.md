@@ -6,7 +6,7 @@
 > **Untuk pengguna:** di chat baru, unggah **zip proyek terbaru** (di dalamnya ada file ini) lalu ketik: *"Lanjutkan dari HANDOFF.md"*.
 > Kalau cuma mau tanya-tanya, mengunggah file ini saja sudah cukup.
 
-Terakhir diperbarui: 2026-11-15 · Versi aplikasi: 1.1.7
+Terakhir diperbarui: 2026-11-22 · Versi aplikasi: 1.1.8
 
 ---
 
@@ -47,10 +47,10 @@ Tauri (Rust) = shell/src-tauri/src/main.rs
 | `shell/src-tauri/src/main.rs` (~2200 baris) | seluruh cangkang Rust. Bagian: state, util, posisi jendela, Dashboard, jendela chat, geser & resize buatan sendiri, kotak tombol (ctl), Browser Dock, klik di jendela ter-pin (hover_loop), alert hadiah, simpan CSS, auto-update, jendela lain, keluar, hotkey, hook dari server, sidecar, start-up, tray |
 | `shell/src-tauri/tauri.conf.json`, `Cargo.toml` | konfigurasi (versi harus sama, lihat `scripts/version.js`) |
 | `src/sidecar.js` | jembatan server ↔ cangkang |
-| `src/updater.js` | cek/unduh pembaruan dari GitHub Releases (node terpisah, SHA-256 wajib cocok) |
+| `src/updater.js` | cek/unduh pembaruan dari GitHub Releases (node terpisah, SHA-256 wajib cocok; membaca daftar rilis termasuk pra-rilis; checksum dari `digest` aset, cadangan baris `SHA-256:` di catatan rilis) |
 | `scripts/build-tauri.js` | menyiapkan `shell/app` (resource) dan `shell/splash` (frontendDist) |
 | `scripts/version.js` | `check` / `set <x.y.z>`: menyamakan versi di 6 tempat (package.json, lock ×2, manifest ekstensi, tauri.conf.json, Cargo.toml) |
-| `.github/workflows/build-tauri.yml` | build installer NSIS; tag `v*` → GitHub Release |
+| `.github/workflows/build-tauri.yml` | build installer NSIS; HANYA jalan untuk tag `v*` (atau Run workflow = uji build tanpa rilis); tag → GitHub Release PRA-RILIS "ChatStream Labs v<versi>", aset hanya `.exe` |
 | ~~`.github/workflows/build.yml`~~ | workflow Electron lama: **DIHAPUS di v1.1.4** (satu push = satu workflow saja) |
 | `test/sidecar-test.js`, `updater-test.js`, `dock-measure-test.js` | tes Node tanpa internet (jalan di CI dan di sandbox Claude) |
 | `shell/README.md` | status singkat cangkang |
@@ -75,7 +75,7 @@ Legenda: ✅ dikonfirmasi pengguna jalan · 🟡 ditulis & lolos build, belum ad
 | **Hemat RAM v1.1.3**: argumen WebView2 hemat (`WV_LEAN`, lewat `wb()`), Dashboard DIHANCURKAN saat disembunyikan >3 dtk (v1.1.7; dulu 30 dtk), flag heap node | 🟡 (ukur ulang di Task Manager: sebelumnya 342.7 MB) |
 | Tombol **Bisu** di Browser Dock (`MUTE_JS`, suara dibisukan dari dalam halaman; bukan SetIsMuted WebView2) | 🟡 |
 | **Muat ulang otomatis** dock yang gagal (Tauri tidak memberi tahu halaman gagal) | ❌ |
-| **Kunci scroll** chat saat ter-pin (`lockScroll`): hook roda mouse global `WH_MOUSE_LL` (`wheel_hook` + `wheel_loop`), aktif bila pengaturan "Chat bisa di-scroll saat terkunci" nyala | 🟡 |
+| **Kunci scroll** chat saat ter-pin (`lockScroll`): hook roda mouse global `WH_MOUSE_LL` (`wheel_hook` + `wheel_loop`), aktif bila pengaturan "Chat bisa di-scroll saat terkunci" nyala (bawaan NYALA sejak v1.1.8) | 🟡 |
 | **Cadangan Kick** lewat jaringan Chromium (`netFetch` menjawab status 0). Hasilnya bergantung Cloudflare, anggap eksperimen | ❌ |
 | Opsi "Abaikan versi ini" (dialog kedua setelah Later; disimpan di `shell-state.json` kunci `skipUpdate`) | 🟡 |
 | Menu tray dinamis (label Pin/Lepas pin berganti) | ❌ (kecil) |
@@ -84,6 +84,12 @@ Legenda: ✅ dikonfirmasi pengguna jalan · 🟡 ditulis & lolos build, belum ad
 
 RAM TERUKUR (screenshot Task Manager, 2026-11-14): total **342.7 MB** (13 proses): Rust 7.5, node 16.7, Console Window Host 5.7, WebView2 ±313 (GPU 114, Manager 64, 4 renderer ±52, 2 widget saweria 24+52).
 Angka "30 MB" yang dulu tercatat HANYA proses Rust. Node cuma ±22 MB (+console), jadi **tahap 3 hampir tidak menghemat RAM**; sarankan ditunda/dibatalkan. Penghemat nyata ada di WebView2 (jumlah jendela/widget, opsi GPU).
+
+RAM TERUKUR v1.1.7 (screenshot Task Manager pengguna, 2026-11-22; kondisi: 2 Browser Dock + 1 chat dock):
+- Dashboard diminimize lewat tombol aplikasi (dihancurkan): grup ChatStream Labs **145.2 MB** (Rust 8.6, WebView2 Manager 79.2, Audio 3.2, Network 8.5, 2 renderer 16.1 + 29.6) + `node.exe` ±17.7 MB (terpisah) = **±163 MB**.
+- Dashboard terbuka: grup **183.0 MB** (Manager 90.2, 3 renderer 15.9 + 29.6 + 27.3) + node ±18 MB = **±201 MB**. Dashboard memakan ±38 MB.
+- Urutan turun: 342.7 (v1.1.2) → ±228 (v1.1.4) → ±163 (v1.1.7, Dashboard tutup). Pemakan terbesar sekarang = WebView2 Manager (±79 MB, sudah termasuk GPU yang disatukan); `node.exe` hanya ±11% dari total.
+- Keputusan 2026-11-22: **tidak** menulis ulang server/konektor ke Rust atau C (hemat ≤ ±18 MB, risiko besar: konektor TikTok/YouTube, tanpa compiler di sandbox). Fitur kirim chat sudah mati bawaan (`sendOn`), jadi menghapusnya tidak menghemat RAM (hanya merapikan kode ±9 KB server + ekstensi ±27 KB).
 
 ## 6. Status hooks server → cangkang
 `protect` ✅ · `open` ✅ · `window` ✅ · `lock`(+id dock) ✅ · `drag`/`resize` (buatan sendiri) 🟡 · `openSettings/Report/Chat` ✅ · `winCtl` ✅ ·
@@ -109,11 +115,12 @@ Angka "30 MB" yang dulu tercatat HANYA proses Rust. Node cuma ±22 MB (+console)
 - Bisu: `MUTE_JS` disuntik lewat `initialization_script` (saat dokumen mulai) + `window.__cslSetMute` dari `dock_apply`. Menutup `<video>/<audio>` dan Web Audio (GainNode). TIDAK menjangkau suara di iframe lintas-situs. Kalau Saweria masih bersuara, penyebab paling mungkin iframe; solusi lanjutan = `with_webview` + `ICoreWebView2_8::SetIsMuted` (butuh crate `webview2-com`, versi harus cocok dengan Tauri).
 - Dialog Tauri hanya punya 2 tombol (`OkCancelCustom`); "Abaikan" dibuat sebagai dialog kedua setelah "Later". `YesNoCancelCustom` ada di plugin versi baru tapi belum diverifikasi.
 - Shell sandbox: `mkdir -p {a,b}` (brace expansion) **gagal** (sh/dash). Buat folder satu per satu.
-- Kuota artifact GitHub (repo Private) cepat penuh (workflow Electron mengunggah ±100 MB tiap push). Workflow Tauri: `retention-days: 1` + `continue-on-error`.
-  Installer diambil lewat **Release** (tag), yang tidak memakai kuota artifact.
+- Kuota artifact GitHub (repo Private) cepat penuh (workflow Electron mengunggah ±100 MB tiap push). Sejak v1.1.8 workflow Tauri TIDAK mengunggah artifact sama sekali.
+  Installer langsung jadi aset **Release** (tag), yang tidak memakai kuota artifact.
+- `/releases/latest` di GitHub MENGABAIKAN pra-rilis. Karena rilis kini pra-rilis, updater memakai `/releases?per_page=15` (non-draf, versi tertinggi yang punya aset `*x64-setup.exe`). Jangan kembalikan ke `/latest`.
 
 ## 8. Cara build & uji
-- Build: push ke `main` → Actions → **Build Tauri**. Installer: buat **Release** dengan tag **persis** `v<versi>` (mis. `v1.1.1`) → aset `ChatStream-Labs_<versi>_x64-setup.exe` + `.sha256`.
+- Build + rilis (sejak v1.1.8): `git tag v<versi> && git push origin v<versi>` (tag **persis** `v<versi>`, mis. `v1.1.8`) → Actions **Build Tauri** → otomatis Release **pra-rilis** berjudul `ChatStream Labs v<versi>` dengan aset `ChatStream-Labs_<versi>_x64-setup.exe` saja (+ "Source code" zip/tar.gz otomatis dari GitHub). Tanpa berkas `.sha256`. Push biasa ke `main` tidak membuild lagi; Run workflow = uji build saja (tanpa rilis).
 - Naikkan versi: `node scripts/version.js set 1.1.2` (menyamakan 6 tempat), commit, lalu tag `v1.1.2`.
 - Tes lokal (Node 22): `node test/sidecar-test.js && node test/updater-test.js && node test/dock-measure-test.js && node scripts/version.js check`.
 - Ikon file installer = `installerIcon` di tauri.conf.json; ikon aplikasi/jendela/tray datang dari `icons/`. Kalau ikon installer tampil "NSIS" polos, `installerIcon` hilang.
@@ -129,6 +136,7 @@ Angka "30 MB" yang dulu tercatat HANYA proses Rust. Node cuma ±22 MB (+console)
 ## 10. Backlog (urutan saran)
 ~~1. Abaikan versi ini~~ (selesai 1.1.2, 🟡) → ~~2. Tombol Bisu~~ (selesai 1.1.2, 🟡, lewat JS) → ~~3. `lockScroll`~~ (selesai 1.1.5, 🟡) → 4. Muat ulang otomatis dock →
 5. Hal kecil (tray dinamis, warna latar dock mengikuti tema) → 6. **Hemat RAM lanjutan** (kalau v1.1.3 belum cukup): gabungkan jendela `ctl-*` dan `galert` ke jendela yang ada; widget dimuat hanya saat perlu; ganti Dashboard ke UI native (besar, mengulang jalur Lite).
+7a. (2026-11-22) Sisa ruang hemat RAM kecil. Satu-satunya percobaan murah: `--disable-gpu` lewat `webview-args.txt` (tanpa build ulang; risiko jendela transparan patah-patah, ukur dulu Manager ±79 MB). Gabung jendela `ctl-*`/`galert` hemat paling banyak beberapa MB.
 7. **Tahap 3** (buang node): RAM sudah terukur, hasilnya tidak sepadan, sarankan dibatalkan. Gantinya: hemat WebView2 (widget dimuat hanya saat perlu, uji `--disable-gpu` lewat `additionalBrowserArgs`, kurangi jendela).
 
 ## 11. Protokol Claude (WAJIB)
@@ -144,6 +152,8 @@ Angka "30 MB" yang dulu tercatat HANYA proses Rust. Node cuma ±22 MB (+console)
 7. Kalau build merah: minta **screenshot/teks error** dari langkah yang gagal; biasanya perbaikannya satu baris.
 
 ## 12. Changelog
+- **2026-11-22 (tanpa perubahan kode)** — Analisis saja: pengguna bertanya apakah mengubah JavaScript ke Rust/C dan menghapus kirim chat membuat app lebih ringan. Jawab: tidak berarti (lihat RAM TERUKUR v1.1.7 di bagian 5). Hasil ukur v1.1.7 dicatat. Tidak ada berkas lain yang diubah.
+- **2026-11-22 (v1.1.8)** — Permintaan pengguna (8 butir): (1) bingkai resize jendela chat (tidak terpin) disamakan dengan Browser Dock: bingkai persegi tipis + 4 sudut siku putih 16 px (CSS `#rz`, `#app::after`; `#app` tanpa lengkung saat tidak terpin, tetap 18 px saat terpin); (2) dialog "Atur Chat Dock" dirapikan (CSS `#cdModal`) dan "Chat bisa di-scroll saat terkunci" jadi NYALA bawaan (`lockScroll!==false` di app.js, `LOCK_SCROLL` Rust default true; hanya mati kalau pengguna mematikan sendiri; hotkey `lockscroll` ikut semantik baru); (3) Hadiah di pengaturan YouTube diberi label "(eksperimental)" (hanya label, perilaku tidak berubah); (4) pilihan "Kepadatan hati" dan "Isi efek" dihapus: selalu 1 hati per like, hati saja; "Tampilkan aktivitas" dihapus dari Monitor > TikTok (tetap ada di Overlay; aktivitas TikTok di Monitor kini selalu nyala, `ttAct` lama diabaikan di dock); (5) alert hadiah TikTok tidak lagi dipotong "...": teks turun baris, baris kedua = jumlah koin (`galert.html`; `coins` diteruskan lewat `galertSend` dan whitelist `/galert` di server.js); (6) kotak "Jendela" di Monitor dihapus (pengaturannya hanya di dialog Atur Chat Dock; `GKEYS.p` kosong); (7) rilis = PRA-RILIS dengan tag `v<versi>` dan judul `ChatStream Labs v<versi>`, workflow hanya jalan untuk tag, tanpa upload artifact; (8) aset rilis hanya `.exe` (tanpa `.sha256`): updater membaca `/releases?per_page=15` (pra-rilis ikut) dan checksum dari `digest` aset, cadangan baris `SHA-256:` di catatan rilis. Tes Node lulus (sidecar, updater diperluas, dock-measure, version check). Dirender di Chromium (galert, dialog, bingkai, halaman pengaturan) tanpa error; Rust (main.rs: 4 baris `lockScroll`) BELUM dikompilasi dan `test/smoke.js` tidak bisa dijalankan di sandbox (tanpa jsdom).
 - **2026-11-15 (v1.1.7)** — Permintaan pengguna: (1) Dashboard > kartu Chat punya tombol gear → dialog "Atur Chat Dock" (posisi tombol, sembunyikan dari OBS, chat bisa di-scroll saat terkunci; tersimpan langsung ke pengaturan global yang sama dengan kotak "Jendela" di tab Monitor, yang tetap ada dan ikut sinkron); (2) tema aplikasi dibuang: Spatial UI jadi satu-satunya (`th-spatial` selalu dipasang di `applyUi` dan di `server.js`; tema neo/glass/clay/liquid + pilihannya dihapus; kunci `theme` lama di settings.json diabaikan); (3) "Port lokal" pindah dari tab Koneksi ke tab Overlay (ID elemen sama); (4) "Pribadi" diganti "Monitor" (teks yang tampil; nama internal/ID tetap); (5) Browser Dock baru: Opacity Dock bawaan 50%; (6) Monitor: Jumlah chat tersimpan bawaan 50 (`DEF.dock.max`, hanya untuk yang belum pernah menyimpan) dan tulisan "(bisa di-scroll)" dihapus; (7) status koneksi Dashboard: cukup username, rata kanan tepat di bawah status; (8) Dashboard di tray dihancurkan setelah 3 dtk (`schedule_suspend`); (9) delay saat keluar: `stop_sidecar` tidak lagi menunggu tetap 400 ms (menunggu sampai sidecar benar-benar keluar, maks 400 ms) dan `quit_app` menyembunyikan semua jendela dulu. Belum dicoba di Windows; Rust belum dikompilasi.
 - **2026-11-14 (v1.1.6)** — Update otomatis dibuat senyap (`/S` lewat cmd + buka app lagi), karena cara lama memunculkan wizard. Belum diuji; hanya berlaku untuk update dari v1.1.6 ke versi berikutnya.
 - **2026-11-14 (v1.1.5)** — Permintaan pengguna: chat ter-pin bisa di-scroll dengan roda mouse tanpa bilah scroll (hook roda global), scrollbar Browser Dock dihapus, kursor berubah saat di tepi/sudut Browser Dock yang tidak di-pin. Belum dicoba di Windows; Rust belum dikompilasi.

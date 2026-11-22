@@ -7,7 +7,11 @@ html,body{margin:0;height:100%;overflow:hidden;background:transparent;font-famil
 body[data-side=left] #galert .ga{align-self:flex-end}
 #galert .ga{display:flex;align-items:center;gap:calc(10px*var(--gs,1));align-self:flex-start;max-width:100%;padding:calc(6px*var(--gs,1)) calc(14px*var(--gs,1)) calc(6px*var(--gs,1)) calc(8px*var(--gs,1));border-radius:calc(14px*var(--gs,1));background:rgba(15,15,22,.92);border:1px solid rgba(255,255,255,.2);color:#fff;font:600 calc(13px*var(--gs,1)) 'Segoe UI',sans-serif;box-shadow:0 2px 10px rgba(0,0,0,.5);animation:gaIn .35s ease both}
 #galert .ga img,#galert .ga .gi{width:calc(40px*var(--gs,1));height:calc(40px*var(--gs,1));flex:none;object-fit:contain;font-size:calc(30px*var(--gs,1));line-height:calc(40px*var(--gs,1));text-align:center}
-#galert .ga .gt{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}#galert .ga.wrap .gt{white-space:normal;overflow-wrap:anywhere}
+/* v1.1.8: teks alert tidak lagi dipotong "...": baris pertama boleh turun baris (tampil semua), baris kedua menunjukkan jumlah koin */
+#galert .ga .gt{min-width:0;display:flex;flex-direction:column;gap:calc(1px*var(--gs,1))}
+#galert .ga .gl1{white-space:normal;overflow-wrap:anywhere;line-height:1.25}
+#galert .ga .gl2{font-weight:600;font-size:.86em;color:#ffd166;line-height:1.2}
+#galert .ga .gl2::before{content:'';display:inline-block;width:.78em;height:.78em;margin-right:.4em;border-radius:50%;background:#ffd166;vertical-align:-.06em}
 #galert .ga.out{opacity:0;transform:translateY(-6px);transition:opacity .4s,transform .4s}
 @keyframes gaIn{from{opacity:0;transform:translateY(-10px) scale(.95)}to{opacity:1;transform:none}}</style></head>
 <body>
@@ -22,10 +26,11 @@ function giftAlert(m){
   if(Date.now()-(m.t||0)>8000)return;
   if(m.kind==='like')return;const box=$('gat');if(!box)return;
   const dur=Math.max(2,Math.min(60,Number(m.dur)||6))*1000,mx=Math.max(1,Math.min(10,Number(m.max)||3));
-  const d=document.createElement('div'),t=document.createElement('span'),b=document.createElement('b');d.className='ga';t.className='gt';
+  const d=document.createElement('div'),t=document.createElement('div'),l1=document.createElement('div'),b=document.createElement('b');d.className='ga';t.className='gt';l1.className='gl1';
   const fb=()=>{const e=document.createElement('span');e.className='gi';e.textContent=ICON.gift;return e;};
   let im;if(m.img){im=document.createElement('img');im.alt='';im.referrerPolicy='no-referrer';gImgLoad(im,m.img,()=>im.replaceWith(fb()));}else im=fb();
-  b.textContent=m.name||'?';t.append(b,' mengirim '+(m.gift||'hadiah')+((m.n||1)>1?' \u00d7'+m.n:''));
+  b.textContent=m.name||'?';l1.append(b,' mengirim '+(m.gift||'hadiah')+((m.n||1)>1?' \u00d7'+m.n:''));t.append(l1);
+  const cn=Math.round(Number(m.coins)||0);if(cn>0){const l2=document.createElement('div');l2.className='gl2';l2.textContent=fmt(cn)+' koin';t.append(l2);} // v1.1.8: jumlah koin (khusus TikTok; hadiah YouTube tidak membawanya)
   const sz=Math.max(50,Math.min(200,Number(m.size)||100))/100;d.style.setProperty('--gs',sz);if(sz>1.05)d.classList.add('wrap');
   d.append(im,t);if(m.order==='top'){box.prepend(d);while(box.children.length>mx)box.lastChild.remove();}else{box.appendChild(d);while(box.children.length>mx)box.firstChild.remove();}
   setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),450);},dur);}

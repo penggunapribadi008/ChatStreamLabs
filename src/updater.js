@@ -2,7 +2,9 @@
 //   node updater.js check <pemilik/repo> <versi-sekarang>
 //   node updater.js download <pemilik/repo> <berkas-tujuan>
 // Keluaran: satu JSON per baris di stdout. Repo harus PUBLIC (tanpa token). Pemasangan TIDAK dilakukan di sini.
-// Keamanan: hanya aset *x64-setup.exe dari github.com; SHA-256 wajib cocok (dari 'digest' rilis atau berkas .sha256), kalau tidak berkas dihapus.
+// Keamanan: hanya aset *x64-setup.exe dari github.com; SHA-256 wajib cocok (dari 'digest' aset, berkas .sha256, atau baris "SHA-256: ..." di catatan rilis), kalau tidak berkas dihapus.
+// v1.1.8: rilis dibuat sebagai PRA-RILIS (prerelease) dan tanpa berkas .sha256, jadi: (1) yang dicari = rilis non-draf TERBARU dari daftar rilis (pra-rilis ikut), bukan /releases/latest (itu mengabaikan pra-rilis);
+//   (2) checksum diambil dari 'digest' aset (diisi GitHub sendiri), dengan cadangan baris SHA-256 di catatan rilis.
 'use strict';
 const fs=require('fs'),crypto=require('crypto');
 const API=(process.env.CSL_GH_API||'https://api.github.com').replace(/\/+$/,'');
@@ -20,26 +22,37 @@ async function getJson(url){
   if(!r.ok)throw new Error('HTTP '+r.status);
   return{status:200,json:await r.json()};
 }
-async function latest(repo){
-  if(!/^[\w.-]+\/[\w.-]+$/.test(repo))throw new Error('repo tidak sah');
-  const g=await getJson(API+'/repos/'+repo+'/releases/latest');
-  if(g.status===404)return null;
-  const j=g.json;
-  if(!j||j.draft||j.prerelease||!j.tag_name)return null;
+function pick(j){
   const assets=Array.isArray(j.assets)?j.assets:[];
   const exe=assets.find(a=>/x64-setup\.exe$/i.test(String(a.name||''))&&okUrl(a.browser_download_url));
   if(!exe)return null;
   const sha=assets.find(a=>String(a.name||'').toLowerCase()===String(exe.name).toLowerCase()+'.sha256'&&okUrl(a.browser_download_url));
   const dg=/^sha256:([0-9a-f]{64})$/i.exec(String(exe.digest||''));
-  return{tag:String(j.tag_name),version:String(j.tag_name).replace(/^v/i,''),name:String(exe.name),url:exe.browser_download_url,sha256:dg?dg[1].toLowerCase():'',shaUrl:sha?sha.browser_download_url:'',size:+exe.size||0};
+  const bd=/sha-?256[^0-9a-f]{0,12}([0-9a-f]{64})/i.exec(String(j.body||''));
+  return{tag:String(j.tag_name),version:String(j.tag_name).replace(/^v/i,''),name:String(exe.name),url:exe.browser_download_url,sha256:dg?dg[1].toLowerCase():'',shaUrl:sha?sha.browser_download_url:'',bodySha:bd?bd[1].toLowerCase():'',size:+exe.size||0};
+}
+async function latest(repo){
+  if(!/^[\w.-]+\/[\w.-]+$/.test(repo))throw new Error('repo tidak sah');
+  const g=await getJson(API+'/repos/'+repo+'/releases?per_page=15');
+  if(g.status===404)return null;
+  const list=Array.isArray(g.json)?g.json:[];
+  let best=null;
+  for(const j of list){
+    if(!j||j.draft||!j.tag_name)continue; // draf dilewati; pra-rilis (prerelease) ikut dihitung
+    const r=pick(j);
+    if(r&&(!best||newer(r.tag,best.tag)))best=r;
+  }
+  return best;
 }
 async function expectedSha(rel){
   if(rel.sha256)return rel.sha256;
-  if(!rel.shaUrl)return '';
-  const r=await fetch(rel.shaUrl,{headers:{'User-Agent':UA},signal:AbortSignal.timeout(15000)});
-  if(!r.ok)return '';
-  const m=/^\s*([0-9a-f]{64})/i.exec((await r.text()).slice(0,200));
-  return m?m[1].toLowerCase():'';
+  if(rel.shaUrl){
+    try{
+      const r=await fetch(rel.shaUrl,{headers:{'User-Agent':UA},signal:AbortSignal.timeout(15000)});
+      if(r.ok){const m=/^\s*([0-9a-f]{64})/i.exec((await r.text()).slice(0,200));if(m)return m[1].toLowerCase();}
+    }catch{}
+  }
+  return rel.bodySha||'';
 }
 
 async function check(repo,cur){

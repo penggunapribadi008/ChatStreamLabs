@@ -18,7 +18,7 @@ const platDef=dock=>{const o={ytSc:true,ytScBg:'auto',ytScBgC:'#ffca28',ytScBgOp
     kkKicks:true,kkKicksBg:'auto',kkKicksBgC:'#53fc18',kkKicksBgOp:38,kkKicksFcOn:false,kkKicksFc:'#ffffff',kkKicksAmt:true,kkKicksHold:3,kkMemBadge:true,kkMemNameOn:false,kkMemC:'#53fc18',kkVipBadge:true};
   for(const pf in ACT){const {pre,list}=ACT[pf];o[pre+'Act']=true;o[pre+'GiftMin']=0;
     list.forEach(([k,,,fc,on])=>{o[pre+k]=on==='b'||(on==='d'&&dock);o[pre+k+'Bg']=true;o[pre+k+'BgC']='#000000';o[pre+k+'BgOp']=60;o[pre+k+'Fc']=fc;});}
-  if(dock){o.ttGiftAl=true;o.ttGiftAlSz=100;o.ttGiftAlOrder='bottom';o.ttGiftAlDur=6;o.ttGiftAlMax=3;o.ttJoinMax=1;o.ttLikeTot=true;o.ttLikeHeart=true;o.ttLikeFx='heart';o.ttLikeDens=2;o.ytGiftAl=true;} // v15.3.4: alert Gift (khusus Dock) = pengaturan sendiri di dalam jenis aktivitasnya, terpisah dari tampil di chat. v15.5.5: alert Like DIHAPUS; ttJoinMax = jumlah notif bergabung sekaligus (1-3, bawaan 1)
+  if(dock){o.ttGiftAl=true;o.ttGiftAlSz=100;o.ttGiftAlOrder='bottom';o.ttGiftAlDur=6;o.ttGiftAlMax=3;o.ttJoinMax=1;o.ttLikeTot=true;o.ttLikeHeart=true;o.ytGiftAl=true;} // v15.3.4: alert Gift (khusus Dock) = pengaturan sendiri di dalam jenis aktivitasnya, terpisah dari tampil di chat. v15.5.5: alert Like DIHAPUS; ttJoinMax = jumlah notif bergabung sekaligus (1-3, bawaan 1)
   return o;};
 const DEF={dock:{...COMMON,...platDef(true),avatar:false,max:50},overlay:{...COMMON,...platDef(false),anim:'auto',align:'left',fsName:20,fsText:20,bg:0,max:8,fade:45,viewers:false,avatar:true}};
 const PRE=[['polos','Default']];
@@ -104,7 +104,7 @@ function applyStyle(){
   const usesVars=!!(tpl.custom&&/--fs[nt]\b|--p5-scale|--nr\b/.test(tpl.css||'')),zm=view==='overlay'&&tpl.custom&&!usesVars&&tpl.struct!=='p5'&&tpl.struct!=='cozy'&&/font(-size)?\s*:[^;}]*\d+(\.\d+)?px/.test(tpl.css||'');
   r.setProperty('--zn',(s.fsName/20).toFixed(3));r.setProperty('--zt',(s.fsText/20).toFixed(3));
   $('usercss').textContent=tpl.custom?tpl.css:'';
-  b.className=[view,isPrev?'preview':'',isLocked?('locked'+(pinned?' pinned':'')):'',s.chatBg?'cb':'',s.order==='top'?'ot':'',(view==='overlay'&&s.align==='right')?'al-right':'',(view==='overlay'&&tpl.struct==='rv')?'s-rv':'','p-'+(tpl.custom?'custom':pid),'an-'+an,zm?'zm':'',(view==='overlay'&&s.gap!==DEF.overlay.gap)?'gap-set':'',booting?'noanim':'',s.viewers?'sv':'',s.time?'st':'',s.avatar?'':'na',s.botTag?'':'nobt',s.hideBots?'hb':'',s.ttLikeTot===false?'nolt':'',(view==='dock'&&filt!=='all')?'f-'+filt:'',!(S.global&&S.global.sendOn===true)?'nosend':'',(isLocked&&S.global&&S.global.lockScroll===true)?'lkscroll':''].filter(Boolean).join(' ');
+  b.className=[view,isPrev?'preview':'',isLocked?('locked'+(pinned?' pinned':'')):'',s.chatBg?'cb':'',s.order==='top'?'ot':'',(view==='overlay'&&s.align==='right')?'al-right':'',(view==='overlay'&&tpl.struct==='rv')?'s-rv':'','p-'+(tpl.custom?'custom':pid),'an-'+an,zm?'zm':'',(view==='overlay'&&s.gap!==DEF.overlay.gap)?'gap-set':'',booting?'noanim':'',s.viewers?'sv':'',s.time?'st':'',s.avatar?'':'na',s.botTag?'':'nobt',s.hideBots?'hb':'',s.ttLikeTot===false?'nolt':'',(view==='dock'&&filt!=='all')?'f-'+filt:'',!(S.global&&S.global.sendOn===true)?'nosend':'',(isLocked&&S.global&&S.global.lockScroll!==false)?'lkscroll':''].filter(Boolean).join(' ');
   if(view==='dock'&&!isLocked)applyUi(s);
   chatColors(s,pid);
   if(view==='overlay'){wrap.id=curStruct==='rv'?'log':curStruct==='cozy'?'chat':'msgs';if(curStruct==='cozy')wrap.dataset.mode='person';else delete wrap.dataset.mode;}
@@ -272,7 +272,7 @@ function styleMsg(d,m,s){
 function galertSend(m,s){
   if(Date.now()-(m.t||0)>8000)return;
   const K='ttGift'; // v15.5.5: hanya alert hadiah (alert like sudah dihapus)
-  post('/galert',{m:{kind:m.kind,name:m.name,gift:m.gift,n:m.n,others:m.others,img:m.img,t:m.t,dur:s&&s[K+'AlDur'],max:s&&s[K+'AlMax'],size:s&&s[K+'AlSz'],order:s&&s[K+'AlOrder']}}).catch(()=>{});}
+  post('/galert',{m:{kind:m.kind,name:m.name,gift:m.gift,n:m.n,coins:m.coins,others:m.others,img:m.img,t:m.t,dur:s&&s[K+'AlDur'],max:s&&s[K+'AlMax'],size:s&&s[K+'AlSz'],order:s&&s[K+'AlOrder']}}).catch(()=>{});}
 // giftAlert (penggambar alert) ada di galert.html sejak v15.5.0; halaman dock hanya meneruskan datanya lewat galertSend.
 // ---- v15.5.3: notif TikTok di bawah "Total penonton" (khusus Dock; wadah #nt di body.html) ----
 // Bergabung: tumpukan paling banyak NT_JMAX baris, tiap baris hilang sendiri setelah NT_HOLD. Like: satu baris saja berisi SATU nama + total like orang itu;
@@ -313,7 +313,7 @@ const HRT_MAX=60,HRT_ON=90,HRT_EMO=['❤️','❤️','😄','🎉','😳','💯
 const hq=[];let hqT=0;
 function heartBurst(m,s){
   if(!$('hrt'))return;
-  const mul=Math.max(1,Number(s&&s.ttLikeDens)||2),n=Math.max(1,Math.min(HRT_MAX,Math.round((Number(m.n)||1)*mul))),mix=!!s&&s.ttLikeFx==='mix';
+  const n=Math.max(1,Math.min(HRT_MAX,Math.round(Number(m.n)||1))),mix=false; // v1.1.8: pilihan kepadatan dan isi efek dihapus: selalu Normal (1 hati per like), hati saja
   for(let i=0;i<n;i++)hq.splice(Math.floor(Math.random()*(hq.length+1)),0,(mix?HRT_EMO[Math.floor(Math.random()*HRT_EMO.length)]:''));
   if(hq.length>150)hq.splice(150);
   if(!hqT)hqT=setInterval(hqTick,70);}
@@ -341,7 +341,7 @@ function addAct(m,re,s,stick){
     if(!re&&view==='overlay'){msgsData.push(m);if(msgsData.length>80)msgsData.shift();}
     const d=actEl(m,s),lg=d.querySelector('.lg');if(lg)lg.src='/yt.png';d.dataset.platform='youtube';put(d);trim();if(stick)toLatest();
     if(s.fade>0&&!isPrev&&!m.sample&&!re)setTimeout(()=>{d.classList.add('out');setTimeout(()=>d.remove(),450);},s.fade*1000);return;}
-  const A=ACT[m.p];if(!A||!s[A.pre+'Act'])return;
+  const A=ACT[m.p];if(!A||(!s[A.pre+'Act']&&!(view==='dock'&&A.pre==='tt')))return; // v1.1.8: Monitor > TikTok tidak punya kotak "Tampilkan aktivitas" lagi: aktivitas TikTok di Monitor selalu nyala (tiap jenis tetap bisa dimatikan sendiri)
   const al=view==='dock'&&!isPrev&&m.p==='tiktok'&&m.kind==='gift'&&s.ttGiftAl===true,inChat=!!s[A.pre+cap(m.kind)]; // v15.3.4: "alert" dan "tampil di chat" dicentang sendiri-sendiri; kalau dua-duanya dicentang, dua-duanya muncul
   if(!inChat&&!al)return;
   if(m.kind==='gift'&&(m.p==='tiktok'?(m.coins||0):(m.n||1))<(s[A.pre+'GiftMin']||0))return;
@@ -554,7 +554,7 @@ const SCDSL=(pre,pf,what)=>[['chk',pre,'Tampilkan '+what],['dep',pre,null,[
   ['pv','sc',pf]]]];
 const MEMDSL=(pre,pf,vip,who,vipKey)=>[['chk',pre+'Badge','Label MEMBER pada chat '+who],['chk',pre+'NameOn','Warnai nama '+who],['dep',pre+'NameOn',null,[['col',pre+'C','Warna nama '+who]]],['chk',vipKey,'Label VIP pada chat VIP'],['pv','mem',pf]];
 const PLAT={
- tt:[['Total like',[['chk','ttLikeTot','Tampilkan total like TikTok'],['chk','ttLikeHeart','Efek hati melayang saat ada like'],['dep','ttLikeHeart',null,[['sel','ttLikeDens','Kepadatan hati',[['1','Normal (1 hati per like)'],['2','Ramai (2 hati per like)'],['4','Sangat ramai (4 hati per like)']]],['sel','ttLikeFx','Isi efek',[['heart','Hati saja (seperti TikTok)'],['mix','Campur (❤️ 😄 🎉 😳 💯)']]]]]],true],['Aktivitas TikTok',[['chk','ttAct','Tampilkan aktivitas'],['dep','ttAct',null,TT_ACTS.map(ACTDSL('tt'))]],false,true]],
+ tt:[['Total like',[['chk','ttLikeTot','Tampilkan total like TikTok'],['chk','ttLikeHeart','Efek hati melayang saat ada like']],true],['Aktivitas TikTok',[['vw','overlay',[['chk','ttAct','Tampilkan aktivitas']]],['dep','ttAct',null,TT_ACTS.map(ACTDSL('tt'))]],false,true]],
  tw:[['Aktivitas Twitch',[['chk','twAct','Tampilkan aktivitas'],['dep','twAct',null,TW_ACTS.map(ACTDSL('tw'))]]],
   ['Bits',SCDSL('twBits','twitch','chat Bits')],
   ['Pesan sorotan',[['chk','twHl','Beri latar pada pesan sorotan (Highlight My Message)']]],
@@ -566,7 +566,7 @@ const PLAT={
   ['Super Sticker',[['chk','ytSticker','Tampilkan Super Sticker']]],
   ['Member',[['chk','ytMemBadge','Label MEMBER pada chat anggota'],['chk','ytMemNameOn','Warnai nama anggota'],['dep','ytMemNameOn',null,[['col','ytMemC','Warna nama anggota']]],['pv','mem','youtube']]],
   ['Moderator',[['chk','ytModBadge','Label MOD pada chat moderator'],['chk','ytModNameOn','Warnai nama moderator'],['dep','ytModNameOn',null,[['col','ytModC','Warna moderator (nama dan label MOD)']]],['pv','mod','youtube']]], // v1.1.0 (bawaan biru, seperti di YouTube)
-  ['Hadiah',[['vw','dock',[['box',[['chk','ytGiftAl','Alert hadiah di samping dock (ukuran, lama, dan jumlah ikut pengaturan alert TikTok)'],['chk','ytGift','Tampilkan hadiah di chat']]]]],['vw','overlay',[['chk','ytGift','Tampilkan hadiah di chat']]]]]]};
+  ['Hadiah <em class="exp">(eksperimental)</em>',[['vw','dock',[['box',[['chk','ytGiftAl','Alert hadiah di samping dock (ukuran, lama, dan jumlah ikut pengaturan alert TikTok)'],['chk','ytGift','Tampilkan hadiah di chat']]]]],['vw','overlay',[['chk','ytGift','Tampilkan hadiah di chat']]]]]]};
 const dflat=l=>l.flatMap(it=>it[0]==='box'?dflat(it[1]):it[0]==='vw'?dflat(it[2]):it[0]==='dep'?dflat(it[3]):['hint','pv','ttl','apv'].includes(it[0])?[]:[it]);
 const PKEYS={},PITEMS=[];['tt','tw','kk','yt'].forEach(p=>{PKEYS[p]=PLAT[p].flatMap(g=>dflat(g[1]));PITEMS.push(...PKEYS[p]);});
 const items=v=>[...FIELDS[v].flatMap(g=>g[1]),...PITEMS];
@@ -608,18 +608,16 @@ function refreshPresets(){const sel=$('overlay_preset');if(!sel)return;const kee
   sel.value=all.some(x=>x[0]===keep)?keep:(all.some(x=>x[0]===cur('overlay').preset)?cur('overlay').preset:'polos');}
 function fill(v,src){const s=src||cur(v);if(v==='overlay')refreshPresets();
   items(v).forEach(it=>{const e=$(v+'_'+it[1]);if(!e)return;if(it[0]==='chk')e.checked=!!s[it[1]];else e.value=s[it[1]];if(it[0]==='sl')lbl(v,it);});syncDeps(v);pvAll(v);}
-function fillGlobal(){const g=S.global||{};$('sendOn').checked=g.sendOn===true;$('autoOpen').checked=g.autoOpen!==false;$('autoConn').checked=g.autoConn===true;$('protect').checked=g.protect!==false;$('lockScroll').checked=g.lockScroll===true;$('ctrlPos').value=g.ctrlPos||'top-right';$('obsW').value=g.obsW||500;$('obsH').value=g.obsH||900;$('obsPass').value=g.obsPass||'';$('botNames').value=g.botNames||'';}
+function fillGlobal(){const g=S.global||{};$('sendOn').checked=g.sendOn===true;$('autoOpen').checked=g.autoOpen!==false;$('autoConn').checked=g.autoConn===true;$('obsW').value=g.obsW||500;$('obsH').value=g.obsH||900;$('obsPass').value=g.obsPass||'';$('botNames').value=g.botNames||'';}
 function collect(v){const o={};items(v).forEach(it=>{const e=$(v+'_'+it[1]);if(!e)return;o[it[1]]=it[0]==='chk'?e.checked:(it[0]==='sl'?+e.value:e.value);});return o;}
 let dt=null;
 function draftChange(v){items(v).filter(i=>i[0]==='sl').forEach(i=>lbl(v,i));syncDeps(v);pvAll(v);if(v==='dock')applyUi(collect('dock'));if(isDash)pvSend();clearTimeout(dt);dt=setTimeout(()=>post('/draft',{view:v,values:collect(v)}),40);}
 if(isSet)$('panes').addEventListener('input',e=>{const id=(e.target&&e.target.id)||'',v=id.startsWith('dock_')?'dock':id.startsWith('overlay_')?'overlay':null;if(v)draftChange(v);});
 // v15.3.4: hotkey (alert on/off, scroll saat gembok, Kirim Chat) mengubah pengaturan dari luar Dashboard; kotaknya ikut berubah (hanya yang benar-benar berubah) supaya tidak tertimpa saat Terapkan
 function syncHk(og,od){const g=S.global||{},d=S.dock||{},c=cur('dock');
-  if(og.lockScroll!==g.lockScroll&&$('lockScroll'))$('lockScroll').checked=g.lockScroll===true;
   if(og.sendOn!==g.sendOn&&$('sendOn'))$('sendOn').checked=g.sendOn===true;
   ['ttGiftAl'].forEach(k=>{const e=$('dock_'+k);if(e&&od[k]!==d[k])e.checked=!!c[k];});syncDeps('dock');
   // v15.4.0: perubahan yang datang dari hotkey / gaya yang baru ditambah BUKAN "perubahan belum diterapkan": patokan (BASE) ikut berubah
-  if(BASE.g&&og.lockScroll!==g.lockScroll)BASE.g.lockScroll=g.lockScroll===true;
   ['ttGiftAl'].forEach(k=>{if(BASE.dock&&$('dock_'+k)&&od[k]!==d[k])BASE.dock[k]=!!c[k];});
   const sp=$('overlay_preset');if(BASE.overlay&&sp){const ids=[...sp.options].map(o=>o.value),pp=cur('overlay').preset;BASE.overlay.preset=ids.includes(pp)?pp:'polos';}}
 function showPane(id,tab){curTab=tab;document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x.dataset.t===tab));document.querySelectorAll('.pane').forEach(p=>p.classList.toggle('on',p.id===id));const pn=$('panes');if(pn)pn.scrollTop=0;if(isDash)dashPane(tab);}
@@ -629,14 +627,14 @@ document.querySelectorAll('[data-back]').forEach(b=>b.onclick=()=>setTab(b.datas
 document.querySelectorAll('[data-resetp]').forEach(b=>b.onclick=()=>{const [v,p]=b.dataset.resetp.split(':');PKEYS[p].forEach(it=>{const e=$(v+'_'+it[1]);if(!e)return;if(it[0]==='chk')e.checked=!!DEF[v][it[1]];else e.value=DEF[v][it[1]];if(it[0]==='sl')lbl(v,it);});draftChange(v);});
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>goTab(t.dataset.t));
 document.querySelectorAll('[data-apply]').forEach(b=>b.onclick=()=>applyView(b.dataset.apply));
-document.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{const v=b.dataset.reset;fill(v,DEF[v]);if(v==='dock'){$('protect').checked=true;$('lockScroll').checked=false;$('ctrlPos').value='top-right';}draftChange(v);});
+document.querySelectorAll('[data-reset]').forEach(b=>b.onclick=()=>{const v=b.dataset.reset;fill(v,DEF[v]);draftChange(v);});
 // ---- v15.4.0: konfirmasi kalau pindah dari bagian yang masih punya perubahan belum diterapkan ----
 // BASE = patokan "sudah tersimpan" yang diambil LANGSUNG dari kotak-kotak pengaturan sesudah diisi (bukan dari S), supaya nilai yang dijepit slider / dipilihkan otomatis tidak dianggap perubahan.
 // Diperbarui sesudah Terapkan, dan oleh syncHk kalau yang mengubah hotkey. Bagian yang dijaga: Pribadi (dock + Jendela), Overlay (overlay + OBS), Hotkey, Nama bot (Koneksi).
 let BASE={};
-const GKEYS={p:[['protect','chk','Sembunyikan dari OBS'],['lockScroll','chk','Chat bisa di-scroll saat terkunci'],['ctrlPos','sel','Posisi tombol Chat Dock']],
+const GKEYS={p:[], // v1.1.8: kotak "Jendela" di Monitor dihapus (pengaturannya ada di dialog Atur Chat Dock, disimpan langsung)
   o:[['obsW','num','Lebar (px)'],['obsH','num','Tinggi (px)'],['obsPass','pass','Password WebSocket OBS']]};
-const GGRP={p:'Jendela',o:'Sambungkan ke OBS'},SEC_NAME={k:'Koneksi',p:'Monitor',o:'Overlay',h:'Hotkey'},PP={tt:'TikTok',tw:'Twitch',kk:'Kick',yt:'YouTube'};
+const GGRP={o:'Sambungkan ke OBS'},SEC_NAME={k:'Koneksi',p:'Monitor',o:'Overlay',h:'Hotkey'},PP={tt:'TikTok',tw:'Twitch',kk:'Kick',yt:'YouTube'};
 const gval=k=>{const e=$(k);return e?(e.type==='checkbox'?e.checked:e.value):'';};
 function snap(v){BASE[v]=collect(v);BASE.g=BASE.g||{};GKEYS[v==='dock'?'p':'o'].forEach(([k])=>{BASE.g[k]=gval(k);});}
 function snapAll(){snap('dock');snap('overlay');BASE.g.botNames=gval('botNames');BASE.hk={...hk};}
@@ -652,7 +650,7 @@ function lblWalk(v,list,g,trail,m){list.forEach(it=>{const t=it[0];
 let LBL=null;
 function lblBuild(){LBL={dock:{},overlay:{}};['dock','overlay'].forEach(v=>{const m=LBL[v];
   FIELDS[v].forEach(([t,its])=>its.forEach(it=>{m[it[1]]={g:t,trail:[]};}));
-  ['tt','tw','kk','yt'].forEach(p=>PLAT[p].forEach(([t,its])=>lblWalk(v,its,PP[p],/^Aktivitas /.test(t)?[]:[t],m)));});}
+  ['tt','tw','kk','yt'].forEach(p=>PLAT[p].forEach(([t,its])=>lblWalk(v,its,PP[p],/^Aktivitas /.test(t)?[]:[plain(t)],m)));});}
 const sameV=(it,a,b)=>it[0]==='chk'?!!a===!!b:it[0]==='sl'?Number(a)===Number(b):String(a==null?'':a).toLowerCase()===String(b==null?'':b).toLowerCase();
 function fmtVal(v,it,val){const e=$(v+'_'+it[1]);
   if(it[0]==='chk')return{t:val?'Nyala':'Mati'};
@@ -678,8 +676,7 @@ function pendingChanges(sec){
   return [];}
 // Terapkan (dipakai tombol Terapkan di tiap halaman DAN dialog konfirmasi)
 async function applyView(v){await post('/settings',{view:v,values:collect(v)});
-  if(v==='dock')await post('/settings',{view:'global',values:{protect:$('protect').checked,lockScroll:$('lockScroll').checked,ctrlPos:$('ctrlPos').value}});
-  else await post('/settings',{view:'global',values:{obsW:+$('obsW').value||500,obsH:+$('obsH').value||900,obsPass:$('obsPass').value}});
+  if(v!=='dock')await post('/settings',{view:'global',values:{obsW:+$('obsW').value||500,obsH:+$('obsH').value||900,obsPass:$('obsPass').value}});
   snap(v);return true;}
 async function applyHk(){const dups=Object.keys(hk).filter(a=>hk[a]&&Object.keys(hk).some(x=>x!==a&&hk[x]===hk[a]));
   if(dups.length){dups.forEach(a=>hkErr[a]='Kombinasi ini dipakai lebih dari satu aksi');hkRender();return false;}
@@ -879,15 +876,13 @@ function dashRender(){const b=$('dst');if(!b)return;const on=PF4.filter(k=>EN[k]
 let dashSt={chat:{},docks:{}};
 const SV_GEAR='<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>';
 // pengaturan Chat Dock (dialog di Dashboard): posisi tombol, sembunyikan dari OBS, chat bisa di-scroll saat terkunci. Disimpan langsung (tanpa tombol Terapkan) ke pengaturan global yang sama dengan kotak "Jendela" di tab Monitor.
-function cdOpen(){const g=S.global||{};$('cdmPos').value=g.ctrlPos||'top-right';$('cdmProt').checked=g.protect!==false;$('cdmScroll').checked=g.lockScroll===true;$('cdModal').hidden=false;}
+function cdOpen(){const g=S.global||{};$('cdmPos').value=g.ctrlPos||'top-right';$('cdmProt').checked=g.protect!==false;$('cdmScroll').checked=g.lockScroll!==false;$('cdModal').hidden=false;} /* v1.1.8: chat bisa di-scroll saat terkunci = bawaan nyala */
 function initCdModal(){
   $('cdmCancel').onclick=()=>{$('cdModal').hidden=true;};
   $('cdModal').onclick=e=>{if(e.target===$('cdModal'))$('cdModal').hidden=true;};
   $('cdmSave').onclick=async()=>{const v={protect:$('cdmProt').checked,lockScroll:$('cdmScroll').checked,ctrlPos:$('cdmPos').value};
     try{await post('/settings',{view:'global',values:v});}catch{return;}
     S.global={...(S.global||{}),...v};
-    $('protect').checked=v.protect;$('lockScroll').checked=v.lockScroll;$('ctrlPos').value=v.ctrlPos; // kotak "Jendela" di tab Monitor ikut sama
-    if(BASE.g){BASE.g.protect=v.protect;BASE.g.lockScroll=v.lockScroll;BASE.g.ctrlPos=v.ctrlPos;}
     $('cdModal').hidden=true;};
 }
 const SV_RELOAD='<path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/>',SV_X='<path d="M6 6l12 12M18 6L6 18"/>',SV_LK_OPEN='<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 7.5-1.5"/>',SV_LK_SHUT='<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>';

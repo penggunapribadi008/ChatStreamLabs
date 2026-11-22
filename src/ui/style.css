@@ -149,12 +149,12 @@ body.addwin #addwin{display:flex;position:absolute;inset:34px 0 0 0;flex-directi
 .card,.tcard{background:var(--card-bg);border:1px solid var(--line);border-radius:var(--rad);box-shadow:var(--sh-card);backdrop-filter:var(--blur)}
 .card{padding:16px;margin-bottom:14px}
 .card h3{margin:0 0 6px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:var(--muted)}
-#panel label,#addwin label,#dnModal label{display:flex;justify-content:space-between;margin:12px 0 5px;color:var(--muted);font-size:12px}
-#panel label b,#dnModal label b{color:var(--text);font-weight:600}
-#panel input[type=text],#panel input[type=number],#panel select,#dnModal input[type=text],#addwin input[type=text],#addwin textarea{width:100%;height:38px;background:var(--ctl-bg);border:1px solid var(--ctl-line);box-shadow:var(--sh-in);border-radius:var(--rad-c);padding:0 11px;color:var(--text);font:inherit}
-#panel select option{background:#1b2329;color:#e8eef0}
+#panel label,#addwin label,#dnModal label,#cdModal label{display:flex;justify-content:space-between;margin:12px 0 5px;color:var(--muted);font-size:12px}
+#panel label b,#dnModal label b,#cdModal label b{color:var(--text);font-weight:600}
+#panel input[type=text],#panel input[type=number],#panel select,#cdModal select,#dnModal input[type=text],#addwin input[type=text],#addwin textarea{width:100%;height:38px;background:var(--ctl-bg);border:1px solid var(--ctl-line);box-shadow:var(--sh-in);border-radius:var(--rad-c);padding:0 11px;color:var(--text);font:inherit}
+#panel select option,#cdModal select option{background:#1b2329;color:#e8eef0}
 #addwin textarea{height:100%;min-height:200px;padding:10px 11px;font:12px/1.5 Consolas,Menlo,monospace;resize:none}
-#panel input:focus,#panel select:focus,#addwin input:focus,#addwin textarea:focus,#msg:focus{border-color:var(--acc)!important}
+#panel input:focus,#panel select:focus,#cdModal select:focus,#addwin input:focus,#addwin textarea:focus,#msg:focus{border-color:var(--acc)!important}
 input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:28px;background:transparent;cursor:pointer;margin:0;touch-action:none}
 input[type=range]::-webkit-slider-runnable-track{height:8px;border-radius:6px;background:linear-gradient(90deg,var(--acc) var(--pct,50%),var(--ctl-bg) var(--pct,50%));box-shadow:var(--sh-in);border:1px solid var(--ctl-line)}
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:22px;height:22px;margin-top:-8px;border-radius:50%;background:var(--acc);border:3px solid var(--winbg);box-shadow:0 1px 6px rgba(0,0,0,.45)}
@@ -362,6 +362,7 @@ body.nosend #msg,body.nosend #send{display:none!important}
 body.nosend #cb_chat{display:none!important}
 /* v15.6.0: mode gembok (pin) bersudut membulat; jendelanya transparan, jadi sudut di luar lengkung tembus pandang */
 body.locked #app{border-radius:18px;overflow:hidden}
+body.locked:not(.pinned) #app{border-radius:0} /* v1.1.8: tidak terpin = bingkai persegi seperti Browser Dock; terpin tetap bersudut membulat */
 /* v15.6.1: HANYA SATU tampilan (jendela transparan, kotak penonton terpisah). Pin = klik tembus; tidak terpin = bingkai tipis + pegangan resize di tepi atas, samping, dan sudut atas (#rz; v15.6.2: sisi bawah tidak ada),
    chat boleh di-scroll (tombol "Chat terbaru" muncul), dan jendela menerima klik di seluruh areanya. Tampilan jendela biasa berlatar gelap yang dulu ada sudah dihapus. */
 #rz{display:none;position:absolute;inset:0;z-index:8;pointer-events:none} /* v15.6.3: di atas #cbar (z 6) dan #fltp (z 7), kalau tidak baris bawah menutupi pegangan sisi bawah */
@@ -374,13 +375,13 @@ body.locked #app{border-radius:18px;overflow:hidden}
 #rz .nw{top:0;left:0;width:18px;height:18px;cursor:nwse-resize}
 #rz .se{bottom:0;right:0;width:18px;height:18px;cursor:nwse-resize}
 #rz .sw{bottom:0;left:0;width:18px;height:18px;cursor:nesw-resize}
-#rz .ne::before,#rz .nw::before,#rz .se::before,#rz .sw::before{content:'';position:absolute;width:9px;height:9px;border:0 solid rgba(255,255,255,.85);filter:drop-shadow(0 0 2px #000)}
-#rz .nw::before{left:5px;top:5px;border-left-width:3px;border-top-width:3px;border-top-left-radius:6px}
-#rz .ne::before{right:5px;top:5px;border-right-width:3px;border-top-width:3px;border-top-right-radius:6px}
-#rz .se::before{right:5px;bottom:5px;border-right-width:3px;border-bottom-width:3px;border-bottom-right-radius:6px}
-#rz .sw::before{left:5px;bottom:5px;border-left-width:3px;border-bottom-width:3px;border-bottom-left-radius:6px}
+#rz .ne::before,#rz .nw::before,#rz .se::before,#rz .sw::before{content:'';position:absolute;width:16px;height:16px;box-sizing:border-box;border:0 solid #fff}
+#rz .nw::before{left:0;top:0;border-left-width:3px;border-top-width:3px}
+#rz .ne::before{right:0;top:0;border-right-width:3px;border-top-width:3px}
+#rz .se::before{right:0;bottom:0;border-right-width:3px;border-bottom-width:3px}
+#rz .sw::before{left:0;bottom:0;border-left-width:3px;border-bottom-width:3px}
 body.locked:not(.pinned) #rz{display:block}
-body.locked:not(.pinned) #app::after{content:'';position:absolute;inset:0;border-radius:18px;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35);pointer-events:none;z-index:5} /* v15.6.3: bingkai penuh sampai bawah (sisi bawah kini bisa di-resize); mask-image dihapus = satu lapisan komposit lebih sedikit */
+body.locked:not(.pinned) #app::after{content:'';position:absolute;inset:0;border-radius:0;box-shadow:inset 0 0 0 2px rgba(255,255,255,.4);pointer-events:none;z-index:5} /* v15.6.3: bingkai penuh sampai bawah (sisi bawah kini bisa di-resize); mask-image dihapus = satu lapisan komposit lebih sedikit */
 body.locked:not(.pinned) #list{overflow-y:auto;scrollbar-width:none}body.locked:not(.pinned) #list::-webkit-scrollbar{display:none}
 .h3sw{display:flex;align-items:center;justify-content:space-between}
 /* status koneksi yang rapi */
@@ -438,6 +439,11 @@ body.dock .wbs{display:flex;flex:none}
 .fab{position:absolute;right:22px;bottom:22px;z-index:5;width:54px;height:54px;border:0;border-radius:50%;background:var(--acc);color:var(--acc-t);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;box-shadow:0 6px 18px rgba(0,0,0,.45);transition:filter .15s,transform .15s}.fab:hover{filter:brightness(1.12);transform:scale(1.05)}
 .fab svg{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:2.4;stroke-linecap:round}
 #dnModal .row{margin:12px 0 0}#dnModal .btns{margin-top:14px}
+/* v1.1.8: dialog "Atur Chat Dock" dirapikan: label di atas kotak pilihan, kotak pilihan selebar dialog, baris centang rata kiri-kanan */
+#cdModal .avbox{max-width:400px}#cdModal h3{margin:0 0 4px;font-size:16px}
+#cdModal label{margin:14px 0 6px}#cdModal select{appearance:auto;cursor:pointer}
+#cdModal .row{margin:0;padding:12px 0;border-bottom:1px solid var(--line)}
+#cdModal .btns{margin-top:12px;justify-content:flex-end}
 
 /* status koneksi tiap platform: di dalam kartu platformnya (Sambungkan live) */
 .cst{font-size:12px;line-height:1.6;color:var(--muted);margin-top:6px}

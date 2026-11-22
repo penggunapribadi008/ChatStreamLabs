@@ -1293,7 +1293,8 @@ static WHEEL_L: AtomicI32 = AtomicI32::new(0);
 static WHEEL_T: AtomicI32 = AtomicI32::new(0);
 static WHEEL_R: AtomicI32 = AtomicI32::new(0);
 static WHEEL_B: AtomicI32 = AtomicI32::new(0);
-static LOCK_SCROLL: AtomicBool = AtomicBool::new(false);
+// v1.1.8: "Chat bisa di-scroll saat terkunci" nyala bawaan (mati hanya kalau pengguna sendiri mematikannya: kunci lockScroll bernilai false)
+static LOCK_SCROLL: AtomicBool = AtomicBool::new(true);
 static WHEEL_HOOK: std::sync::Once = std::sync::Once::new();
 
 #[repr(C)]
@@ -1982,7 +1983,7 @@ fn run_action(app: &AppHandle, name: &str) {
         "report" => open_report(app),
         "chat" => open_chat(app),
         "lockscroll" => {
-            let cur = read_global(app).get("lockScroll").and_then(|v| v.as_bool()) == Some(true);
+            let cur = read_global(app).get("lockScroll").and_then(|v| v.as_bool()) != Some(false);
             send(app, json!({"t":"setGlobal","obj":{"lockScroll": !cur}}));
         }
         "send" => {
@@ -2087,7 +2088,7 @@ fn handle_hook(app: &AppHandle, name: &str, a: &[Value]) -> Value {
                 *g = pos;
             }
             LOCK_SCROLL.store(
-                a.get(0).and_then(|g| g.get("lockScroll")).and_then(|v| v.as_bool()) == Some(true),
+                a.get(0).and_then(|g| g.get("lockScroll")).and_then(|v| v.as_bool()) != Some(false),
                 Ordering::Relaxed,
             );
             pos_ctl(app, "chat");
@@ -2374,7 +2375,7 @@ fn main() {
             let _ = std::fs::create_dir_all(data_dir(&h));
             let protect = read_global(&h).get("protect").and_then(|v| v.as_bool()) != Some(false);
             sh(&h).protect.store(protect, Ordering::SeqCst);
-            LOCK_SCROLL.store(read_global(&h).get("lockScroll").and_then(|v| v.as_bool()) == Some(true), Ordering::Relaxed);
+            LOCK_SCROLL.store(read_global(&h).get("lockScroll").and_then(|v| v.as_bool()) != Some(false), Ordering::Relaxed);
             if let Some(p) = read_global(&h).get("ctrlPos").and_then(|v| v.as_str()) {
                 if let Ok(mut g) = sh(&h).ctrl_pos.lock() {
                     *g = p.to_string();
