@@ -189,7 +189,12 @@ const srv=http.createServer((req,res)=>{
     if(u.pathname==='/send-set')return body(({on})=>setGlobal({sendOn:on===true})); // v15.3.2: bawaan MATI (eksperimental); hanya nyala kalau sendOn === true
     if(u.pathname==='/autoconn-set')return body(({on})=>setGlobal({autoConn:on===true}));
     if(u.pathname==='/autoopen-set')return body(({on})=>setGlobal({autoOpen:on!==false}));
-    if(u.pathname==='/donate-docks')return json(async({docks})=>{const r=cleanDocks(docks);if(r.error)return r;setGlobal({donateDocks:r.docks});return{ok:true,docks:r.docks};});
+    if(u.pathname==='/donate-docks')return json(async({docks})=>{const r=cleanDocks(docks);if(r.error)return r;setGlobal({donateDocks:r.docks});
+      // v1.1.10: hotkey milik Browser Dock yang dihapus ikut dibuang (dan dilepas dari Windows)
+      const ids=new Set(r.docks.map(d=>d.id)),hk={...(settings.global.hotkeys||{})};let ch=false;
+      Object.keys(hk).forEach(k=>{const m=/^dock:([^:]+):/.exec(k);if(m&&!ids.has(m[1])){delete hk[k];ch=true;}});
+      if(ch){setGlobal({hotkeys:hk});if(hooks.setHotkeys)Promise.resolve(hooks.setHotkeys(hk)).catch(()=>{});}
+      return{ok:true,docks:r.docks};});
     if(u.pathname==='/donate')return json(async({act,id})=>{if(!hooks.donate)return{error:'hanya di aplikasi desktop'};return(await hooks.donate(String(act||''),id?String(id):''))||{ok:true};});
     // v1.1.9: mata per jendela. ?t=chat (atau tanpa t) = Chat Dock (kunci global `protect`); ?t=<id> = satu Browser Dock (peta global `dockProtect`, tidak ada = tersembunyi)
     if(u.pathname==='/protect-toggle')return body(()=>{const t=u.searchParams.get('t')||'chat';if(t==='chat')return setGlobal({protect:settings.global.protect===false});const m={...(settings.global.dockProtect||{})};m[t]=m[t]===false;return setGlobal({dockProtect:m});});

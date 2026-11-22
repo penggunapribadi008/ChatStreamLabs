@@ -44,6 +44,8 @@ jobs:
           node test/sidecar-test.js
           node test/updater-test.js
           node test/dock-measure-test.js
+          node test/protect-test.js
+          node test/hotkey-test.js
 
       - name: Siapkan bahan (UI, server, splash)
         run: node scripts/build-tauri.js

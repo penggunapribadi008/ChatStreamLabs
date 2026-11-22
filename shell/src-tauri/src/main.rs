@@ -1986,8 +1986,61 @@ const HK_DEF: [(&str, &str); 16] = [
     ("newsession", ""),
 ];
 
+// v1.1.10: hotkey per Browser Dock. Kunci "dock:<id>:<aksi>", aksi = toggle (buka/tutup), pin, obs (mata), reload, mute.
+fn dock_hotkey(app: &AppHandle, id: &str, act: &str) {
+    if don_find(app, id).is_none() {
+        return;
+    }
+    let label = parent_label(id);
+    let open = app
+        .get_webview_window(&label)
+        .map(|w| w.is_visible().unwrap_or(false))
+        .unwrap_or(false);
+    match act {
+        "toggle" => {
+            donate_act(app, if open { "close" } else { "open" }, id);
+        }
+        "reload" => {
+            donate_act(app, "reload", id);
+        }
+        "pin" => {
+            if open {
+                dock_set_lock(app, id, !lock_of(app, id));
+            }
+        }
+        "obs" => {
+            let cur = dock_prot(app, id);
+            let mut m = read_global(app)
+                .get("dockProtect")
+                .and_then(|v| v.as_object().cloned())
+                .unwrap_or_default();
+            m.insert(id.to_string(), json!(!cur));
+            send(app, json!({"t":"setGlobal","obj":{"dockProtect": Value::Object(m)}}));
+        }
+        "mute" => {
+            let mut list = don_cfg(app);
+            let mut now = false;
+            for d in list.iter_mut() {
+                if d.get("id").and_then(|v| v.as_str()) == Some(id) {
+                    now = !d.get("mute").and_then(|v| v.as_bool()).unwrap_or(false);
+                    d["mute"] = json!(now);
+                }
+            }
+            js(app, &label, &format!("window.__cslSetMute&&window.__cslSetMute({})", now));
+            send(app, json!({"t":"setGlobal","obj":{"donateDocks": Value::Array(list)}}));
+        }
+        _ => {}
+    }
+}
+
 fn run_action(app: &AppHandle, name: &str) {
     if !sh(app).app_ready.load(Ordering::SeqCst) {
+        return;
+    }
+    if let Some(rest) = name.strip_prefix("dock:") {
+        if let Some((id, act)) = rest.rsplit_once(':') {
+            dock_hotkey(app, id, act);
+        }
         return;
     }
     match name {
@@ -2055,6 +2108,34 @@ fn set_hotkeys(app: &AppHandle, map: &Value) -> Value {
             })
             .is_ok();
         res.insert(name.to_string(), json!(ok));
+    }
+    // v1.1.10: hotkey per Browser Dock (kunci "dock:<id>:<aksi>"; tanpa bawaan; hanya didaftarkan kalau dock-nya masih ada)
+    if let Some(o) = map.as_object() {
+        for (name, v) in o.iter() {
+            let Some(rest) = name.strip_prefix("dock:") else { continue };
+            let acc = v.as_str().unwrap_or("").trim().to_string();
+            if acc.is_empty() {
+                continue;
+            }
+            let valid = rest
+                .rsplit_once(':')
+                .map(|(id, act)| don_find(app, id).is_some() && ["toggle", "pin", "obs", "reload", "mute"].contains(&act))
+                .unwrap_or(false);
+            if !valid {
+                continue;
+            }
+            let n = name.to_string();
+            let ok = gs
+                .on_shortcut(acc.as_str(), move |app, _sc, ev| {
+                    if ev.state() == ShortcutState::Pressed {
+                        let a = app.clone();
+                        let n2 = n.clone();
+                        std::thread::spawn(move || run_action(&a, &n2));
+                    }
+                })
+                .is_ok();
+            res.insert(name.to_string(), json!(ok));
+        }
     }
     Value::Object(res)
 }

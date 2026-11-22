@@ -461,7 +461,7 @@ if(isStatic){
       const s=cur(view),lim=Date.now()-(s.fade>0?s.fade*1000:1e12);
       data.history.filter(m=>m.t>lim).slice(-(view==='overlay'?s.max:Math.min(300,s.max>0?s.max:300))).forEach(m=>add(m));if(view==='dock'){flushB(true);toLatest();}bootDone();} // v15.5.5: riwayat digambar SEBELUM bootDone (jendela lama baru diganti kalau halaman baru melapor siap, jadi kerja berat tidak lagi jatuh tepat di momen pergantian) dan tidak lebih dari jumlah chat tersimpan
     else if(type==='settings'){const og=saved.global||{},od=saved.dock||{};saved=copy(data);S=copy(data);S.global=S.global||{};
-      if(isSet){refreshPresets();syncHk(og,od);if(isDash){pvSend();dashDocks();}}else if(isTpl)tplOnSettings();else if(isAdd){applyUi(cur('dock'));}else{applyStyle();if(isPrev)resample();}}
+      if(isSet){refreshPresets();syncHk(og,od);hkSyncDocks();if(isDash){pvSend();dashDocks();}}else if(isTpl)tplOnSettings();else if(isAdd){applyUi(cur('dock'));}else{applyStyle();if(isPrev)resample();}}
     else if(type==='draft'){if(live&&data.view===view){S[view]=data.values;applyStyle();if(isPrev)resample();else if(isPrev&&!document.querySelector('.m'))samples(false);}
       else if((isTpl||isAdd)&&data.view==='dock')applyUi({...cur('dock'),...data.values});}
     else if(type==='draftclear'){if(live){S=copy(saved);document.querySelectorAll('.sample').forEach(x=>x.remove());applyStyle();if(isPrev)resample();}else if(isTpl||isAdd)applyUi(cur('dock'));}
@@ -671,14 +671,14 @@ function pendingChanges(sec){
   if(!BASE.dock)return [];
   if(sec==='p')return viewDiffs('dock');
   if(sec==='o')return viewDiffs('overlay');
-  if(sec==='h')return Object.keys(HK_LBL).filter(a=>(hk[a]||'')!==((BASE.hk||{})[a]||'')).map(a=>({g:'Hotkey',trail:[],label:HK_LBL[a],from:{t:BASE.hk[a]?showHk(BASE.hk[a]):'Kosong'},to:{t:hk[a]?showHk(hk[a]):'Kosong'}}));
+  if(sec==='h')return hkKeys().filter(a=>(hk[a]||'')!==((BASE.hk||{})[a]||'')).map(a=>({g:'Hotkey',trail:[],label:hkLabel(a),from:{t:BASE.hk[a]?showHk(BASE.hk[a]):'Kosong'},to:{t:hk[a]?showHk(hk[a]):'Kosong'}}));
   if(sec==='k'){const n=gval('botNames'),was=String(BASE.g.botNames||''),sh=x=>x.trim()?(x.length>40?x.slice(0,40)+'\u2026':x):'Kosong';return n.trim()!==was.trim()?[{g:'Nama bot tambahan',trail:[],label:'Nama bot tambahan',from:{t:sh(was)},to:{t:sh(n)}}]:[];}
   return [];}
 // Terapkan (dipakai tombol Terapkan di tiap halaman DAN dialog konfirmasi)
 async function applyView(v){await post('/settings',{view:v,values:collect(v)});
   if(v!=='dock')await post('/settings',{view:'global',values:{obsW:+$('obsW').value||500,obsH:+$('obsH').value||900,obsPass:$('obsPass').value}});
   snap(v);return true;}
-async function applyHk(){const dups=Object.keys(hk).filter(a=>hk[a]&&Object.keys(hk).some(x=>x!==a&&hk[x]===hk[a]));
+async function applyHk(){hkPrune();const dups=Object.keys(hk).filter(a=>hk[a]&&Object.keys(hk).some(x=>x!==a&&hk[x]===hk[a]));
   if(dups.length){dups.forEach(a=>hkErr[a]='Kombinasi ini dipakai lebih dari satu aksi');hkRender();return false;}
   const r=await(await post('/hotkeys',{hotkeys:hk})).json();hkErr={};Object.keys(r).forEach(a=>{if(r[a]===false)hkErr[a]='Tidak bisa dipakai (sudah dipakai program lain)';});hkRender();
   BASE.hk={...hk};return !Object.keys(r).some(a=>r[a]===false);}
@@ -733,20 +733,38 @@ function combo(e){
   return{p,k};}
 const NUMN={numadd:'+',numsub:'-',nummult:'*',numdiv:'/',numdec:'.'};
 const showHk=s=>s?s.split('+').filter(Boolean).map(x=>/^num\d$/.test(x)?'Num '+x[3]:(NUMN[x]?'Num '+NUMN[x]:x)).join(' + '):'-';
-function hkRender(){const box=$('hkl');box.innerHTML='';
-  Object.keys(HK_LBL).forEach(a=>{const r=document.createElement('div');r.className='hk';
-    r.innerHTML='<span class="hkl"></span><button type="button" class="btn b4 sm ic hkx" title="Hapus hotkey"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v5M14 11v5"/></svg></button><input type="text" readonly>'+(hkErr[a]?'<div class="hks"></div>':'');
-    r.querySelector('.hkl').textContent=HK_LBL[a];const inp=r.querySelector('input');inp.value=showHk(hk[a]);
-    if(hkErr[a])r.querySelector('.hks').textContent=hkErr[a];
-    r.querySelector('.hkx').onclick=()=>{hk[a]='';hkErr[a]='';hkRender();};
-    inp.onfocus=()=>{inp.classList.add('cap');inp.value='Tekan tombol…';};
-    inp.onblur=()=>{inp.classList.remove('cap');inp.value=showHk(hk[a]);};
-    inp.onkeydown=e=>{e.preventDefault();if(e.key==='Escape'){inp.blur();return;}
-      if(e.key==='Backspace'&&!e.ctrlKey&&!e.altKey&&!e.shiftKey){hk[a]='';hkErr[a]='';inp.blur();hkRender();return;}
-      const c=combo(e);if(!c)return;
-      const str=[...c.p,c.k].join('+');const dup=Object.keys(hk).find(x=>x!==a&&hk[x]===str);
-      hk[a]=str;hkErr[a]=dup?'Sama dengan "'+HK_LBL[dup]+'", pilih tombol lain':'';inp.blur();hkRender();};
-    box.appendChild(r);});}
+// v1.1.10: hotkey dikelompokkan dalam kotak: Chat Dock, Umum, Semua Browser Dock sekaligus, lalu SATU KOTAK PER Browser Dock (judul = nama dock).
+// Hotkey tiap dock disimpan dengan kunci 'dock:<id>:<aksi>'; tidak ada bawaan (kosong, isi sendiri). Dock baru = kotak baru muncul sendiri.
+const HK_GRP=[['Chat Dock',['lock','hide','obs','chat','up','down','clear','filter','lockscroll','alertgift','send']],['Umum',['settings','report','newsession']],['Semua Browser Dock sekaligus',['donate','donatereload']]];
+const HK_DOCK=[['toggle','Buka / tutup'],['pin','Pin / lepas pin'],['obs','Sembunyikan dari OBS (on/off)'],['reload','Muat ulang'],['mute','Bisukan suara (on/off)']];
+const hkDocks=()=>{const g=S.global||{};return Array.isArray(g.donateDocks)?g.donateDocks:[];};
+const hkDockKey=(id,a)=>'dock:'+id+':'+a;
+const hkLabel=a=>{const m=/^dock:([^:]+):(\w+)$/.exec(a);if(m){const d=hkDocks().find(x=>x.id===m[1]),t=HK_DOCK.find(x=>x[0]===m[2]);return(d?(d.name||d.id):'Browser Dock')+': '+(t?t[1]:m[2]);}return HK_LBL[a]||a;};
+const hkKeys=()=>{const k=Object.keys(HK_LBL);hkDocks().forEach(d=>HK_DOCK.forEach(([a])=>k.push(hkDockKey(d.id,a))));return k;};
+// kunci milik dock yang sudah dihapus, dan kunci dock yang kosong, tidak dikirim/disimpan
+function hkPrune(){const ids=new Set(hkDocks().map(d=>d.id));Object.keys(hk).forEach(k=>{const m=/^dock:([^:]+):/.exec(k);if(m&&(!ids.has(m[1])||!hk[k]))delete hk[k];});}
+let hkSig='';const hkSigOf=()=>hkDocks().map(d=>d.id+'\t'+(d.name||'')).join('\n');
+// dipanggil saat daftar/ nama Browser Dock berubah: gambar ulang kotak hotkey (kecuali sedang menangkap tombol)
+function hkSyncDocks(){if(!isSet||!$('hkl')||hkSig===hkSigOf())return;const ae=document.activeElement;if(ae&&ae.closest&&ae.closest('#hkl'))return;hkRender();}
+function hkRow(a,lbl){const r=document.createElement('div');r.className='hk';
+  r.innerHTML='<span class="hkl"></span><button type="button" class="btn b4 sm ic hkx" title="Hapus hotkey"><svg viewBox="0 0 24 24"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14h10l1-14"/><path d="M10 11v5M14 11v5"/></svg></button><input type="text" readonly>'+(hkErr[a]?'<div class="hks"></div>':'');
+  r.querySelector('.hkl').textContent=lbl;const inp=r.querySelector('input');inp.value=showHk(hk[a]);
+  if(hkErr[a])r.querySelector('.hks').textContent=hkErr[a];
+  r.querySelector('.hkx').onclick=()=>{hk[a]='';hkErr[a]='';hkRender();};
+  inp.onfocus=()=>{inp.classList.add('cap');inp.value='Tekan tombol…';};
+  inp.onblur=()=>{inp.classList.remove('cap');inp.value=showHk(hk[a]);};
+  inp.onkeydown=e=>{e.preventDefault();if(e.key==='Escape'){inp.blur();return;}
+    if(e.key==='Backspace'&&!e.ctrlKey&&!e.altKey&&!e.shiftKey){hk[a]='';hkErr[a]='';inp.blur();hkRender();return;}
+    const c=combo(e);if(!c)return;
+    const str=[...c.p,c.k].join('+');const dup=Object.keys(hk).find(x=>x!==a&&hk[x]===str);
+    hk[a]=str;hkErr[a]=dup?'Sama dengan "'+hkLabel(dup)+'", pilih tombol lain':'';inp.blur();hkRender();};
+  return r;}
+function hkRender(){const box=$('hkl');box.innerHTML='';hkSig=hkSigOf();
+  const card=(title,rows)=>{const c=document.createElement('div'),h=document.createElement('h3');c.className='card';h.textContent=title;c.appendChild(h);rows.forEach(([a,t])=>c.appendChild(hkRow(a,t)));box.appendChild(c);};
+  HK_GRP.forEach(([t,ks])=>card(t,ks.map(a=>[a,HK_LBL[a]])));
+  const L=hkDocks();
+  if(!L.length){const c=document.createElement('div'),h=document.createElement('h3'),p=document.createElement('div');c.className='card';h.textContent='Browser Dock';p.className='hint';p.textContent='Belum ada Browser Dock. Setelah kamu menambahkannya di Dashboard, kotak hotkey untuk tiap dock muncul di sini.';c.append(h,p);box.appendChild(c);}
+  L.forEach(d=>card(d.name||d.id,HK_DOCK.map(([a,t])=>[hkDockKey(d.id,a),t])));}
 const openC=async(w,id)=>{const r=await(await post('/open',{what:w,id})).json();if(r.error)alert(r.error);};
 if(isSet){
 $('hkdef').onclick=()=>{hk={...HK_DEF};hkErr={};hkRender();};
@@ -921,7 +939,7 @@ function dnOpen(d,isNew){dnCur={d:copy(d),isNew};dnDelArm=false;
   $('dnmMsg').className='hint';$('dnmMsg').textContent='';$('dnmDel').textContent='Hapus';$('dnmDel').style.display=isNew?'none':'';
   $('dnModal').hidden=false;$('dnmUrl').focus();}
 async function dnPost(L){const r=await(await post('/donate-docks',{docks:L})).json();if(r.error){$('dnmMsg').className='hint no';$('dnmMsg').textContent=r.error;return false;}
-  S.global=S.global||{};S.global.donateDocks=r.docks;$('dnModal').hidden=true;dnCur=null;dashDocks();setTimeout(dashPoll,250);return true;}
+  S.global=S.global||{};S.global.donateDocks=r.docks;$('dnModal').hidden=true;dnCur=null;dashDocks();hkSyncDocks();setTimeout(dashPoll,250);return true;}
 function initDnModal(){
   $('dnmOp').oninput=dnOpLbl;$('dnmDop').oninput=dnOpLbl;
   $('dnmCancel').onclick=()=>{$('dnModal').hidden=true;dnCur=null;};
