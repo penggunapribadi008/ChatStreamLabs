@@ -45,6 +45,7 @@ struct Shell {
     upd_busy: AtomicBool,
     ctrl_pos: Mutex<String>,               // posisi kotak tombol chat: top-right, bottom-left, dst.
     docks: Mutex<HashMap<String, DockSt>>, // Browser Dock yang sedang terbuka (kunci = label jendela)
+    dock_prot: Mutex<HashMap<String, bool>>, // v1.1.9: "mata" tiap Browser Dock (kunci = san(id)); tidak ada = tersembunyi dari OBS (bawaan)
     child: Mutex<Option<CommandChild>>,
     port: AtomicU16,
     app_ready: AtomicBool, // false selama splash (tidak ada jendela aplikasi yang boleh tampil)
@@ -71,6 +72,7 @@ impl Shell {
             upd_busy: AtomicBool::new(false),
             ctrl_pos: Mutex::new("top-right".to_string()),
             docks: Mutex::new(HashMap::new()),
+            dock_prot: Mutex::new(HashMap::new()),
             child: Mutex::new(None),
             port: AtomicU16::new(0),
             app_ready: AtomicBool::new(false),
@@ -157,9 +159,41 @@ fn push_state(app: &AppHandle, open: Option<bool>) {
     );
 }
 
+// v1.1.9: "mata" (sembunyikan dari OBS) kini per jendela, bukan satu saklar untuk semua:
+//   - Chat Dock + jendela alert hadiah + kotak tombol chat -> sh.protect
+//   - tiap Browser Dock + kotak tombolnya -> dock_prot (bawaan tersembunyi)
+//   - Dashboard dan jendela yang dibuka dari Dashboard (win-*) -> SELALU terlihat di OBS
+fn dock_prot(app: &AppHandle, id: &str) -> bool {
+    sh(app).dock_prot.lock().ok().and_then(|m| m.get(&san(id)).copied()).unwrap_or(true)
+}
+
+fn load_dock_prot(app: &AppHandle, v: Option<&Value>) {
+    if let Ok(mut m) = sh(app).dock_prot.lock() {
+        m.clear();
+        if let Some(o) = v.and_then(|x| x.as_object()) {
+            for (k, val) in o {
+                m.insert(san(k), val.as_bool() != Some(false));
+            }
+        }
+    }
+}
+
+fn prot_for(app: &AppHandle, label: &str) -> bool {
+    if label == "chat" || label == "galert" || label == "ctl-chat" {
+        return sh(app).protect.load(Ordering::SeqCst);
+    }
+    if let Some(id) = label.strip_prefix("dock-") {
+        return dock_prot(app, id);
+    }
+    if let Some(id) = label.strip_prefix("ctl-") {
+        return dock_prot(app, id);
+    }
+    false
+}
+
 fn apply_protect(app: &AppHandle) {
-    let on = sh(app).protect.load(Ordering::SeqCst);
     for (label, w) in app.webview_windows() {
+        let on = prot_for(app, &label);
         let _ = w.set_content_protected(on);
         if label.starts_with("ctl-") {
             let _ = w.eval(&format!("window.__st&&window.__st({{prot:{}}})", on));
@@ -287,7 +321,7 @@ fn make_dash(app: &AppHandle) -> tauri::Result<WebviewWindow> {
         })
         .build()?;
     restore_bounds(app, &w, "dash");
-    let _ = w.set_content_protected(sh(app).protect.load(Ordering::SeqCst));
+    let _ = w.set_content_protected(false); // v1.1.9: Dashboard selalu terlihat di OBS
     let a = app.clone();
     w.on_window_event(move |ev| match ev {
         WindowEvent::CloseRequested { api, .. } => {
@@ -396,7 +430,7 @@ fn make_chat(app: &AppHandle) {
     match built {
         Ok(w) => {
             restore_bounds(app, &w, "chat");
-            let _ = w.set_content_protected(sh(app).protect.load(Ordering::SeqCst));
+            let _ = w.set_content_protected(prot_for(app, "chat"));
             if locked {
                 let _ = w.set_ignore_cursor_events(true);
             }
@@ -824,7 +858,7 @@ fn make_ctl(app: &AppHandle, t: &str) {
         return;
     }
     let Some(parent) = app.get_webview_window(&parent_label(t)) else { return };
-    let prot = sh(app).protect.load(Ordering::SeqCst);
+    let prot = prot_for(app, &label);
     let lk = lock_of(app, t);
     let path = format!("/?view=ctl&t={}&prot={}&lk={}", urlenc(t), if prot { 1 } else { 0 }, if lk { 1 } else { 0 });
     let built = wb(app, &label, WebviewUrl::External(page_url(app, &path)))
@@ -1105,7 +1139,7 @@ fn make_dock(app: &AppHandle, id: &str, locked: bool) -> Result<(), String> {
         m.insert(label.clone(), DockSt { id: id.to_string(), locked, url: url.to_string(), cont: (0.0, 0.0) });
     }
     restore_bounds(app, &w, &label);
-    let _ = w.set_content_protected(sh(app).protect.load(Ordering::SeqCst));
+    let _ = w.set_content_protected(prot_for(app, &label));
     dock_mode(&w, locked);
     let a = app.clone();
     let i2 = id.to_string();
@@ -1538,7 +1572,7 @@ fn ga_make(app: &AppHandle) {
             set_noactivate(&g, true);
             set_owner(&g, &chat);
             let _ = g.set_ignore_cursor_events(true);
-            let _ = g.set_content_protected(sh(app).protect.load(Ordering::SeqCst));
+            let _ = g.set_content_protected(prot_for(app, "galert"));
             pos_galert(app);
         }
         Err(e) => log(app, &format!("gagal membuat jendela alert: {}", e)),
@@ -1818,7 +1852,7 @@ fn open_win(app: &AppHandle, url_s: &str, opt: &Value) {
         .build()
     {
         Ok(w) => {
-            let _ = w.set_content_protected(sh(app).protect.load(Ordering::SeqCst));
+            let _ = w.set_content_protected(false); // v1.1.9: jendela yang dibuka dari Dashboard selalu terlihat di OBS
         }
         Err(e) => log(app, &format!("gagal membuka jendela {}: {}", label, e)),
     }
@@ -2032,6 +2066,7 @@ fn handle_hook(app: &AppHandle, name: &str, a: &[Value]) -> Value {
     match name {
         "protect" => {
             sh(app).protect.store(arg_b(0), Ordering::SeqCst);
+            load_dock_prot(app, a.get(1)); // v1.1.9: argumen ke-2 = peta mata Browser Dock {id: true/false}
             apply_protect(app);
             Value::Null
         }
@@ -2375,6 +2410,7 @@ fn main() {
             let _ = std::fs::create_dir_all(data_dir(&h));
             let protect = read_global(&h).get("protect").and_then(|v| v.as_bool()) != Some(false);
             sh(&h).protect.store(protect, Ordering::SeqCst);
+            load_dock_prot(&h, read_global(&h).get("dockProtect"));
             LOCK_SCROLL.store(read_global(&h).get("lockScroll").and_then(|v| v.as_bool()) != Some(false), Ordering::Relaxed);
             if let Some(p) = read_global(&h).get("ctrlPos").and_then(|v| v.as_str()) {
                 if let Ok(mut g) = sh(&h).ctrl_pos.lock() {

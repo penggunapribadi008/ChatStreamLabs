@@ -25,7 +25,7 @@ document.body.classList.toggle('pinmode',true); // v1.0.2: Browser Dock juga mem
 // v15.5.0: keadaan datang dari main.js (alamat halaman + window.__st saat "Sembunyikan dari OBS" diganti), tanpa polling /dash-state tiap 2 detik
 window.__st=s=>{if(s&&s.prot!==undefined)setProt(s.prot);if(s&&s.lk!==undefined)setLk(s.lk);};
 setProt(Q.get('prot')!=='0');setLk(Q.get('lk')==='1');
-const sync=()=>fetch('/dash-state').then(r=>r.json()).then(r=>{setProt(r.protect);const d=isChat?r.chat:(r.docks&&r.docks[T]);if(d)setLk(d.locked);}).catch(()=>{});
+const sync=()=>fetch('/dash-state').then(r=>r.json()).then(r=>{setProt(isChat?r.protect:(r.dockProtect||{})[T]!==false);const d=isChat?r.chat:(r.docks&&r.docks[T]);if(d)setLk(d.locked);}).catch(()=>{});
 if(Q.get('prot')===null)sync(); // dibuka tanpa parameter (mis. manual): ambil keadaan sekali saja
 const mv=$('mover');
 mv.addEventListener('pointerdown',e=>{try{mv.setPointerCapture(e.pointerId);}catch{}post('/drag',{on:true,...idb});});
@@ -35,6 +35,6 @@ mv.addEventListener('pointerdown',e=>{try{mv.setPointerCapture(e.pointerId);}cat
 let lkBusy=false;
 $('unlock').onclick=()=>{if(lkBusy)return;lkBusy=true;document.body.classList.add('busy');setTimeout(()=>{lkBusy=false;document.body.classList.remove('busy');},400);post('/lock',{on:!lk,...idb});};
 $('cclose').onclick=()=>post('/win',{which:isChat?'main':'donate:'+T,act:'close'});
-$('eye').onclick=()=>post('/protect-toggle').then(sync);
+$('eye').onclick=()=>post('/protect-toggle?t='+encodeURIComponent(T)).then(sync); // v1.1.9: mata milik jendela ini saja
 window.__ready=true;
 </script></body></html>

@@ -1,6 +1,6 @@
 [package]
 name = "chatstream-labs"
-version = "1.1.8"
+version = "1.1.9"
 description = "ChatStream Labs"
 edition = "2021"
 rust-version = "1.77"

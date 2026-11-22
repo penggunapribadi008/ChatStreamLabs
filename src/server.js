@@ -108,7 +108,7 @@ function cleanDocks(a){
   }
   return{docks:out};
 }
-function setGlobal(v){settings.global={...settings.global,...v};fs.writeFileSync(SF,JSON.stringify(settings));emit('settings',settings);if(v.protect!==undefined&&hooks.protect)hooks.protect(settings.global.protect!==false);if(hooks.global)hooks.global(settings.global);}
+function setGlobal(v){settings.global={...settings.global,...v};fs.writeFileSync(SF,JSON.stringify(settings));emit('settings',settings);if((v.protect!==undefined||v.dockProtect!==undefined)&&hooks.protect)hooks.protect(settings.global.protect!==false,settings.global.dockProtect||{});if(hooks.global)hooks.global(settings.global);}
 module.exports={hooks,ready,preload,cmd,setGlobal,cleanDonateUrl,endSession:()=>stats.end(),flush:()=>stats.flush(),get port(){return PORT;}};
 process.on('exit',()=>{try{stats.flush();}catch{}});
 const AVOID=[[3306,'MySQL'],[3389,'Remote Desktop Windows'],[4200,'Angular'],[4455,'OBS WebSocket (dipakai tombol Tambahkan overlay ke OBS)'],[5000,'Flask / AirPlay'],[5173,'Vite'],[5432,'PostgreSQL'],[5500,'Live Server VS Code'],[5900,'VNC'],[6379,'Redis'],[8000,'server web lokal'],[8080,'server web / proxy'],[8888,'Jupyter'],[27017,'MongoDB']].map(([port,name])=>({port,name}));
@@ -191,7 +191,8 @@ const srv=http.createServer((req,res)=>{
     if(u.pathname==='/autoopen-set')return body(({on})=>setGlobal({autoOpen:on!==false}));
     if(u.pathname==='/donate-docks')return json(async({docks})=>{const r=cleanDocks(docks);if(r.error)return r;setGlobal({donateDocks:r.docks});return{ok:true,docks:r.docks};});
     if(u.pathname==='/donate')return json(async({act,id})=>{if(!hooks.donate)return{error:'hanya di aplikasi desktop'};return(await hooks.donate(String(act||''),id?String(id):''))||{ok:true};});
-    if(u.pathname==='/protect-toggle')return body(()=>setGlobal({protect:settings.global.protect===false}));
+    // v1.1.9: mata per jendela. ?t=chat (atau tanpa t) = Chat Dock (kunci global `protect`); ?t=<id> = satu Browser Dock (peta global `dockProtect`, tidak ada = tersembunyi)
+    if(u.pathname==='/protect-toggle')return body(()=>{const t=u.searchParams.get('t')||'chat';if(t==='chat')return setGlobal({protect:settings.global.protect===false});const m={...(settings.global.dockProtect||{})};m[t]=m[t]===false;return setGlobal({dockProtect:m});});
     if(u.pathname==='/shape')return body(({rects,list})=>{if(hooks.shape)hooks.shape(Array.isArray(rects)?rects:[],list&&typeof list==='object'?list:null);});
     if(u.pathname==='/ready')return body(()=>autoStart());
     if(u.pathname==='/log')return body(({msg})=>{try{fs.appendFileSync(path.join(base,'log.txt'),new Date().toISOString()+' '+String(msg).slice(0,800)+'\n');}catch{}});
@@ -210,7 +211,7 @@ const srv=http.createServer((req,res)=>{
       if(['youtube','tiktok','twitch','kick'].includes(what)){const u2=extUrl(what)||chatUrl(what);if(!u2)return{error:'Isi username '+({youtube:'YouTube',tiktok:'TikTok',twitch:'Twitch',kick:'Kick'})[what]+' dulu di Koneksi.'};hooks.open(u2);return{ok:true};}
       return{error:'tidak dikenal'};});
     if(u.pathname==='/obs-add')return json(async o=>{await obsAdd({...o,url:`http://localhost:${PORT}/?view=overlay`});return{ok:true};});
-    if(u.pathname==='/settings')return body(({view,values})=>{settings[view]=view==='global'?{...settings.global,...values}:values;fs.writeFileSync(SF,JSON.stringify(settings));emit('settings',settings);if(view==='global'){if(hooks.protect)hooks.protect(settings.global.protect!==false);if(hooks.global)hooks.global(settings.global);}});
+    if(u.pathname==='/settings')return body(({view,values})=>{settings[view]=view==='global'?{...settings.global,...values}:values;fs.writeFileSync(SF,JSON.stringify(settings));emit('settings',settings);if(view==='global'){if(hooks.protect)hooks.protect(settings.global.protect!==false,settings.global.dockProtect||{});if(hooks.global)hooks.global(settings.global);}});
     if(u.pathname==='/connect')return body(({youtube,tiktok,twitch,kick,kickRoom})=>{
       // v15.6.6: akun/live yang dihubungkan berubah (pindah dari live A ke live B) = isi chat direset semua
       const chg=(cfg.youtube||'')!==(youtube||'')||(cfg.tiktok||'')!==(tiktok||'')||(cfg.twitch||'')!==(twitch||'')||(cfg.kick||'')!==(kick||'')||String(cfg.kickRoom||'')!==String(kickRoom||'').replace(/\D/g,'');
@@ -230,7 +231,7 @@ const srv=http.createServer((req,res)=>{
     });
   }
   if(u.pathname==='/analytics'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});return res.end(JSON.stringify(stats.get(u.searchParams.get('id')||'cur',viewers)));}
-  if(u.pathname==='/dash-state'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});return res.end(JSON.stringify({protect:settings.global.protect!==false,...(hooks.dashState?hooks.dashState():{chat:{},docks:{}})}));}
+  if(u.pathname==='/dash-state'){res.writeHead(200,{'Content-Type':'application/json','Cache-Control':'no-store'});return res.end(JSON.stringify({protect:settings.global.protect!==false,dockProtect:settings.global.dockProtect||{},...(hooks.dashState?hooks.dashState():{chat:{},docks:{}})}));}
   if(u.pathname==='/state'){res.writeHead(200,{'Content-Type':'application/json'});return res.end(JSON.stringify({protect:settings.global.protect!==false}));}
   if(u.pathname==='/account'){res.writeHead(200,{'Content-Type':'application/json'});const has=p=>hasExt(p);return res.end(JSON.stringify({youtube:has('youtube'),tiktok:has('tiktok'),twitch:has('twitch'),kick:has('kick')}));}
   if(u.pathname==='/urls'){res.writeHead(200,{'Content-Type':'application/json'});return res.end(JSON.stringify({youtube:extUrl('youtube')||chatUrl('youtube'),tiktok:extUrl('tiktok')||chatUrl('tiktok'),twitch:extUrl('twitch')||chatUrl('twitch'),kick:extUrl('kick')||chatUrl('kick')}));}
