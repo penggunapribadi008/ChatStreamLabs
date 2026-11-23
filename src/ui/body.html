@@ -1,6 +1,6 @@
 <body class="dock p-polos">
 <div id="boot">Memuat…</div>
-<div id="tb"><div class="ttl"><img src="/icon.png" alt=""><span id="tbt">ChatStream Labs</span></div><div class="wbs"><button class="wb" id="wmin" title="Perkecil">&#8211;</button><button class="wb x" id="wclose" title="Tutup">&#10005;</button></div></div>
+<div id="tb"><div class="ttl"><img src="/icon.png" alt=""><span id="tbt">ChatStream Labs</span></div><div class="wbs"><button class="wb" id="wmin" title="Perkecil" aria-label="Perkecil"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 5h8"/></svg></button><button class="wb x" id="wclose" title="Tutup" aria-label="Tutup"><svg viewBox="0 0 10 10" aria-hidden="true"><path d="M1 1l8 8M9 1L1 9"/></svg></button></div></div>
 <div id="app">
   <div id="top"><div class="vchip" id="chy"><img src="/yt.png" alt=""><b id="vy">-</b></div><div class="vchip" id="cht"><img src="/tt.png" alt=""><b id="vt">-</b></div><div class="vchip off" id="cw"><img src="/tw.png" alt=""><b id="vw">-</b></div><div class="vchip off" id="ck"><img src="/kick.png" alt=""><b id="vk">-</b></div><div id="tot" class="vchip" title="Penonton yang sedang menonton sekarang (semua platform yang tersambung), bukan puncak"><small>Total penonton</small><b id="vs">-</b></div></div>
   <div id="lw"><div id="nt"><div id="ntj"></div><div id="ntl"></div></div><div id="list"><div id="msgs"></div></div><div id="lkstrip"><i></i></div><button id="tobottom">&#8595; Chat terbaru</button></div>
@@ -47,14 +47,14 @@
       <div class="cng">
       <div class="cn" id="cn_youtube"><div class="cnh"><img src="/yt.png" alt=""><b>YouTube</b><label class="sw" title="Aktifkan / nonaktifkan YouTube"><input type="checkbox" id="en_youtube"><i></i></label></div><div class="cnr"><input type="text" id="yt" placeholder="Username YouTube, contoh @namakamu"><div class="cst" id="st_youtube"></div></div></div>
       <div class="cn" id="cn_tiktok"><div class="cnh"><img src="/tt.png" alt=""><b>TikTok</b><label class="sw" title="Aktifkan / nonaktifkan TikTok"><input type="checkbox" id="en_tiktok"><i></i></label></div><div class="cnr"><input type="text" id="tk" placeholder="Username TikTok, contoh @namakamu"><div class="cst" id="st_tiktok"></div></div></div>
-      <div class="cn" id="cn_twitch"><div class="cnh"><img src="/tw.png" alt=""><b>Twitch <em class="exp">(eksperimental)</em></b><label class="sw" title="Aktifkan / nonaktifkan Twitch"><input type="checkbox" id="en_twitch"><i></i></label></div><div class="cnr"><input type="text" id="twu" placeholder="Username Twitch, contoh namakamu"><div class="cst" id="st_twitch"></div></div></div>
-      <div class="cn" id="cn_kick"><div class="cnh"><img src="/kick.png" alt=""><b>Kick <em class="exp">(eksperimental)</em></b><label class="sw" title="Aktifkan / nonaktifkan Kick"><input type="checkbox" id="en_kick"><i></i></label></div><div class="cnr"><input type="text" id="kku" placeholder="Username Kick, contoh namakamu"><div class="cst" id="st_kick"></div></div><details class="kkopt"><summary>Kick tidak mau tersambung?</summary><input type="number" id="kkroom" placeholder="ID chatroom Kick (opsional)"></details></div>
+      <div class="cn" id="cn_twitch"><div class="cnh"><img src="/tw.png" alt=""><b>Twitch <span class="exp">(eksperimental)</span></b><label class="sw" title="Aktifkan / nonaktifkan Twitch"><input type="checkbox" id="en_twitch"><i></i></label></div><div class="cnr"><input type="text" id="twu" placeholder="Username Twitch, contoh namakamu"><div class="cst" id="st_twitch"></div></div></div>
+      <div class="cn" id="cn_kick"><div class="cnh"><img src="/kick.png" alt=""><b>Kick <span class="exp">(eksperimental)</span></b><label class="sw" title="Aktifkan / nonaktifkan Kick"><input type="checkbox" id="en_kick"><i></i></label></div><div class="cnr"><input type="text" id="kku" placeholder="Username Kick, contoh namakamu"><div class="cst" id="st_kick"></div></div><details class="kkopt"><summary>Kick tidak mau tersambung?</summary><input type="number" id="kkroom" placeholder="ID chatroom Kick (opsional)"></details></div>
       </div>
       <div class="row"><span>Sambung otomatis saat aplikasi dibuka</span><input type="checkbox" id="autoConn"></div>
       <div class="btns"><button class="btn b1" id="conn">Sambungkan</button><button class="btn b2" id="disc">Putuskan</button></div></div>
-    <div class="card"><h3 class="h3sw"><span>Kirim Chat <em class="exp">(eksperimental)</em></span><label class="sw" title="Aktifkan / nonaktifkan kolom kirim chat di dock (eksperimental, bawaannya mati)"><input type="checkbox" id="sendOn"><i></i></label></h3>
+    <div class="card"><h3 class="h3sw"><span>Kirim Chat <span class="exp">(eksperimental)</span></span><label class="sw" title="Aktifkan / nonaktifkan kolom kirim chat di dock (eksperimental, bawaannya mati)"><input type="checkbox" id="sendOn"><span class="kn"></span></label></h3>
       <div class="row"><span>Buka halaman chat otomatis di Chrome</span><input type="checkbox" id="autoOpen" checked></div>
-      <div class="stat"><div class="chip2" data-pf="youtube"><img src="/yt.png" alt=""><span>YouTube</span><b id="ay">-</b></div><div class="chip2" data-pf="tiktok"><img src="/tt.png" alt=""><span>TikTok</span><b id="at">-</b></div><div class="chip2" data-pf="twitch"><img src="/tw.png" alt=""><span>Twitch <em class="exp">(eksperimental)</em></span><b id="aw">-</b></div><div class="chip2" data-pf="kick"><img src="/kick.png" alt=""><span>Kick <em class="exp">(eksperimental)</em></span><b id="ak">-</b></div></div>
+      <div class="stat"><div class="chip2" data-pf="youtube"><img src="/yt.png" alt=""><span>YouTube</span><b id="ay">-</b></div><div class="chip2" data-pf="tiktok"><img src="/tt.png" alt=""><span>TikTok</span><b id="at">-</b></div><div class="chip2" data-pf="twitch"><img src="/tw.png" alt=""><span>Twitch <span class="exp">(eksperimental)</span></span><b id="aw">-</b></div><div class="chip2" data-pf="kick"><img src="/kick.png" alt=""><span>Kick <span class="exp">(eksperimental)</span></span><b id="ak">-</b></div></div>
       <ol class="steps">
         <li><div class="sn">1</div><div class="sb"><b>Buka folder ekstensi</b><div class="btns"><button class="btn b3 sm" id="oe">Buka folder ekstensi</button></div></div></li>
         <li><div class="sn">2</div><div class="sb"><b>Pasang di Chrome</b><div class="btns"><button class="btn b3 sm" id="cx">Salin alamat chrome://extensions</button></div></div></li>
@@ -66,17 +66,17 @@
       <div class="btns"><button class="btn b1" id="sbot">Terapkan</button></div></div>
   </div>
   <div class="pane" id="pp"><div class="card"><h3>Aktivitas per platform</h3><div class="hint nop" style="display:none">Belum ada platform yang menyala.</div>
-      <button class="plat" data-pf="youtube" data-pg="dock_yt"><img src="/yt.png" alt=""><span><b>YouTube</b><small>Super Chat, Super Sticker, Member</small></span><i>&#8250;</i></button>
-      <button class="plat" data-pf="tiktok" data-pg="dock_tt"><img src="/tt.png" alt=""><span><b>TikTok</b><small>Bergabung, hadiah, suka, ikuti, bagikan, langganan</small></span><i>&#8250;</i></button>
-      <button class="plat" data-pf="twitch" data-pg="dock_tw"><img src="/tw.png" alt=""><span><b>Twitch <em class="exp">(eksperimental)</em></b><small>Bits, subscribe, gift sub, raid, pengumuman, chatter baru</small></span><i>&#8250;</i></button>
-      <button class="plat" data-pf="kick" data-pg="dock_kk"><img src="/kick.png" alt=""><span><b>Kick <em class="exp">(eksperimental)</em></b><small>Kicks, subscribe, gift sub, follow, raid, hadiah poin</small></span><i>&#8250;</i></button></div>
+      <button class="plat" data-pf="youtube" data-pg="dock_yt"><img src="/yt.png" alt=""><span><b>YouTube</b><small>Super Chat, Super Sticker, Member</small></span><i aria-hidden="true"></i></button>
+      <button class="plat" data-pf="tiktok" data-pg="dock_tt"><img src="/tt.png" alt=""><span><b>TikTok</b><small>Bergabung, hadiah, suka, ikuti, bagikan, langganan</small></span><i aria-hidden="true"></i></button>
+      <button class="plat" data-pf="twitch" data-pg="dock_tw"><img src="/tw.png" alt=""><span><b>Twitch <span class="exp">(eksperimental)</span></b><small>Bits, subscribe, gift sub, raid, pengumuman, chatter baru</small></span><i aria-hidden="true"></i></button>
+      <button class="plat" data-pf="kick" data-pg="dock_kk"><img src="/kick.png" alt=""><span><b>Kick <span class="exp">(eksperimental)</span></b><small>Kicks, subscribe, gift sub, follow, raid, hadiah poin</small></span><i aria-hidden="true"></i></button></div>
   <div id="pp_b"></div>
     <div class="bar"><button class="btn b4" data-reset="dock">Reset</button><button class="btn b1" data-apply="dock">Terapkan</button></div></div>
   <div class="pane" id="po"><div class="card"><h3>Aktivitas per platform</h3><div class="hint nop" style="display:none">Belum ada platform yang menyala.</div>
-      <button class="plat" data-pf="youtube" data-pg="overlay_yt"><img src="/yt.png" alt=""><span><b>YouTube</b><small>Super Chat, Super Sticker, Member</small></span><i>&#8250;</i></button>
-      <button class="plat" data-pf="tiktok" data-pg="overlay_tt"><img src="/tt.png" alt=""><span><b>TikTok</b><small>Bergabung, hadiah, suka, ikuti, bagikan, langganan</small></span><i>&#8250;</i></button>
-      <button class="plat" data-pf="twitch" data-pg="overlay_tw"><img src="/tw.png" alt=""><span><b>Twitch <em class="exp">(eksperimental)</em></b><small>Bits, subscribe, gift sub, raid, pengumuman, chatter baru</small></span><i>&#8250;</i></button>
-      <button class="plat" data-pf="kick" data-pg="overlay_kk"><img src="/kick.png" alt=""><span><b>Kick <em class="exp">(eksperimental)</em></b><small>Kicks, subscribe, gift sub, follow, raid, hadiah poin</small></span><i>&#8250;</i></button></div>
+      <button class="plat" data-pf="youtube" data-pg="overlay_yt"><img src="/yt.png" alt=""><span><b>YouTube</b><small>Super Chat, Super Sticker, Member</small></span><i aria-hidden="true"></i></button>
+      <button class="plat" data-pf="tiktok" data-pg="overlay_tt"><img src="/tt.png" alt=""><span><b>TikTok</b><small>Bergabung, hadiah, suka, ikuti, bagikan, langganan</small></span><i aria-hidden="true"></i></button>
+      <button class="plat" data-pf="twitch" data-pg="overlay_tw"><img src="/tw.png" alt=""><span><b>Twitch <span class="exp">(eksperimental)</span></b><small>Bits, subscribe, gift sub, raid, pengumuman, chatter baru</small></span><i aria-hidden="true"></i></button>
+      <button class="plat" data-pf="kick" data-pg="overlay_kk"><img src="/kick.png" alt=""><span><b>Kick <span class="exp">(eksperimental)</span></b><small>Kicks, subscribe, gift sub, follow, raid, hadiah poin</small></span><i aria-hidden="true"></i></button></div>
   <div id="po_b"></div>
     <div class="card"><h3>Sambungkan ke OBS</h3>
       <div class="g2"><div style="flex:1"><label><span>Lebar (px)</span></label><input type="number" id="obsW" min="100" max="3840"></div><div style="flex:1"><label><span>Tinggi (px)</span></label><input type="number" id="obsH" min="100" max="2160"></div></div>
@@ -91,7 +91,7 @@
       </ol>
       <label><span>Alamat overlay (kalau mau pasang manual)</span></label><input type="text" readonly id="u2"></div>
     <div class="card"><h3>Port lokal</h3>
-      <div style="display:flex;align-items:stretch;margin:8px 0;border:1px solid var(--line,#3a3f4b);border-radius:10px;overflow:hidden"><span style="padding:9px 4px 9px 12px;opacity:.65;white-space:nowrap;user-select:none">http://localhost:</span><input type="number" id="portIn" min="1024" max="65535" inputmode="numeric" style="flex:1;min-width:0;border:0;outline:0;background:transparent;color:inherit;font:inherit;padding:9px 12px 9px 0"></div>
+      <div class="portrow"><span>http://localhost:</span><input type="number" id="portIn" min="1024" max="65535" inputmode="numeric"></div>
       <div class="btns"><button class="btn b1 sm" id="portsave">Simpan port</button><button class="btn b4 sm" id="portavoid">Hindari</button><button class="btn b3 sm" id="portrestart" style="display:none">Mulai ulang sekarang</button></div>
       <div id="portmsg" class="hint"></div></div>
     <div class="bar"><button class="btn b4" data-reset="overlay">Reset</button><button class="btn b1" data-apply="overlay">Terapkan</button></div></div>

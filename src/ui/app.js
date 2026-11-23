@@ -530,9 +530,9 @@ const ACTDSL=pre=>([k,l,ic])=>{
   // Di tab Overlay tetap satu kotak centang seperti dulu (alert hanya ada di Dock).
   // v15.6.5: Gift TikTok di Pribadi: "Tampilkan di chat" dan "Aktifkan alert" masing-masing dikotak sendiri di dalam kotak Hadiah (Overlay tetap satu kotak: tidak ada alert di Overlay).
   if(pre==='tt'&&k==='Gift'){const K='tt'+k;return['box',[
-    ['vw','dock',[['ttl',ic+' '+l],...min]],
-    ['vw','dock',[['box',[['chk',K,ic+' '+l,'Tampilkan di chat'],['dep',K,null,look]]]]],
-    ['vw','overlay',[['chk',K,ic+' '+l],['dep',K,null,[...min,...look]]]],
+    ['vw','dock',[['ttl',l],...min]],
+    ['vw','dock',[['box',[['chk',K,l,'Tampilkan di chat'],['dep',K,null,look]]]]],
+    ['vw','overlay',[['chk',K,l],['dep',K,null,[...min,...look]]]],
     ['vw','dock',[['box',[['chk',K+'Al','Aktifkan alert'],['dep',K+'Al',null,[
       ['sl',K+'AlSz','Ukuran alert',50,150,'%'],
       ['sel',K+'AlOrder','Alert terbaru muncul di',[['bottom','Bawah (alert baru di bawah alert lama)'],['top','Atas (alert baru di atas alert lama)']]],
@@ -540,10 +540,10 @@ const ACTDSL=pre=>([k,l,ic])=>{
       ['apv',K],
       ]]]]]]]];}
   if(pre==='tt'&&k==='Like'){const K='tt'+k;return['box',[
-    ['vw','dock',[['ttl',ic+' '+l],...min]],
-    ['chk',K,ic+' '+l,'Tampilkan sebagai notif di bawah total penonton'],['dep',K,null,[['vw','overlay',min],...look]]]];}
+    ['vw','dock',[['ttl',l],...min]],
+    ['chk',K,l,'Tampilkan sebagai notif di bawah total penonton'],['dep',K,null,[['vw','overlay',min],...look]]]];}
   const jmx=pre==='tt'&&k==='Join'?[['vw','dock',[['sl','ttJoinMax','Jumlah notif bergabung tampil sekaligus',1,3,'notif']]]]:[]; // v15.5.5: bawaan 1, maksimal 3 (hanya Dock)
-  return['box',[['chk',pre+k,ic+' '+l],...(pre==='tt'&&k==='Join'?[['vw','dock',[]]]:[]),['dep',pre+k,null,[...min,...jmx,...look]]]];};
+  return['box',[['chk',pre+k,l],...(pre==='tt'&&k==='Join'?[['vw','dock',[]]]:[]),['dep',pre+k,null,[...min,...jmx,...look]]]];};
 // halaman "chat berbayar yang disorot": Super Chat (YouTube), Bits (Twitch), Kicks (Kick)
 const SCDSL=(pre,pf,what)=>[['chk',pre,'Tampilkan '+what],['dep',pre,null,[
   ['sel',pre+'Bg','Latar sorotan',[['auto','Ikut warna '+what],['custom','Warna sendiri'],['none','Tanpa latar']]],
@@ -566,7 +566,7 @@ const PLAT={
   ['Super Sticker',[['chk','ytSticker','Tampilkan Super Sticker']]],
   ['Member',[['chk','ytMemBadge','Label MEMBER pada chat anggota'],['chk','ytMemNameOn','Warnai nama anggota'],['dep','ytMemNameOn',null,[['col','ytMemC','Warna nama anggota']]],['pv','mem','youtube']]],
   ['Moderator',[['chk','ytModBadge','Label MOD pada chat moderator'],['chk','ytModNameOn','Warnai nama moderator'],['dep','ytModNameOn',null,[['col','ytModC','Warna moderator (nama dan label MOD)']]],['pv','mod','youtube']]], // v1.1.0 (bawaan biru, seperti di YouTube)
-  ['Hadiah <em class="exp">(eksperimental)</em>',[['vw','dock',[['box',[['chk','ytGiftAl','Alert hadiah di samping dock (ukuran, lama, dan jumlah ikut pengaturan alert TikTok)'],['chk','ytGift','Tampilkan hadiah di chat']]]]],['vw','overlay',[['chk','ytGift','Tampilkan hadiah di chat']]]]]]};
+  ['Hadiah <span class="exp">(eksperimental)</span>',[['vw','dock',[['box',[['chk','ytGiftAl','Alert hadiah di samping dock (ukuran, lama, dan jumlah ikut pengaturan alert TikTok)'],['chk','ytGift','Tampilkan hadiah di chat']]]]],['vw','overlay',[['chk','ytGift','Tampilkan hadiah di chat']]]]]]};
 const dflat=l=>l.flatMap(it=>it[0]==='box'?dflat(it[1]):it[0]==='vw'?dflat(it[2]):it[0]==='dep'?dflat(it[3]):['hint','pv','ttl','apv'].includes(it[0])?[]:[it]);
 const PKEYS={},PITEMS=[];['tt','tw','kk','yt'].forEach(p=>{PKEYS[p]=PLAT[p].flatMap(g=>dflat(g[1]));PITEMS.push(...PKEYS[p]);});
 const items=v=>[...FIELDS[v].flatMap(g=>g[1]),...PITEMS];
