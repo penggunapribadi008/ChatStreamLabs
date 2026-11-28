@@ -275,12 +275,30 @@ body:is(.dock,.p-polos) .m.ishl:not(.sc):not(.p5-msg){background:color-mix(in sr
 .pv .m{color:var(--white)}
 /* ===== jendela laporan ===== */
 body.reportwin #rep{display:flex;flex-direction:column;position:absolute;inset:34px 0 0 0;font-size:13px}
-.rhead{display:flex;align-items:center;gap:10px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--winbg);flex:none}
-.rhead select{height:36px;min-width:280px;max-width:60%;background:var(--ctl-bg);border:1px solid color-mix(in srgb,var(--muted) 62%,var(--ctl-bg));box-shadow:var(--sh-in);border-radius:var(--rad-c);color:var(--text);padding:0 10px;font:inherit}
-.rhead select option{background:var(--c-1b2329);color:var(--c-e8eef0)}.rhead .sp{flex:1}
+.rhead{display:flex;flex-direction:column;gap:8px;padding:12px 20px;border-bottom:1px solid var(--line);background:var(--winbg);flex:none}
+.rrow{display:flex;align-items:center;gap:8px 10px;flex-wrap:wrap;min-width:0}.rrow .sp{flex:1}
+.rfl{font-size:12px;color:var(--muted)}
+.rsw{position:relative;flex:0 1 440px;min-width:240px}
+.rsb{width:100%;height:36px;display:flex;align-items:center;justify-content:space-between;gap:8px;padding:0 10px;background:var(--ctl-bg);border:1px solid color-mix(in srgb,var(--muted) 62%,var(--ctl-bg));border-radius:var(--rad-c);color:var(--text);font:inherit;text-align:left;cursor:pointer}
+.rsb:hover{border-color:var(--muted)}.rsb span{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums}
+.rsb .chev{width:16px;height:16px;flex:none;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;color:var(--muted)}
+.rsm{position:absolute;z-index:30;left:0;right:0;top:calc(100% + 4px);max-height:min(320px,50vh);overflow:auto;display:flex;flex-direction:column;gap:2px;padding:4px;background:var(--card-bg);border:1px solid var(--line);border-radius:var(--rad-c)}
+.rsm[hidden]{display:none}
+.rso{display:flex;align-items:center;justify-content:space-between;gap:8px;width:100%;padding:8px 10px;border:0;border-radius:calc(var(--rad-c) - 1px);background:transparent;color:var(--text);font:inherit;font-size:13px;text-align:left;cursor:pointer;font-variant-numeric:tabular-nums}
+.rso:hover{background:var(--grey-a14)}.rso.on{background:var(--btn2)}.rso em{font-style:normal;font-size:11px;font-weight:700;color:var(--bad);flex:none}
+.seg{display:inline-flex;flex-wrap:wrap;border:1px solid var(--ctl-line);border-radius:var(--rad-c);overflow:hidden;background:var(--ctl-bg)}
+.seg button{height:32px;padding:0 14px;border:0;border-right:1px solid var(--ctl-line);background:transparent;color:var(--muted);font:600 13px var(--font-ui);cursor:pointer}
+.seg button:last-child{border-right:0}.seg button:hover{color:var(--text);background:var(--grey-a14)}
+.seg button.on{background:var(--btn2);color:var(--text);box-shadow:inset 0 -2px 0 var(--pc,var(--text))}
+.seg [data-f=y]{--pc:var(--yc)}.seg [data-f=t]{--pc:var(--tcl)}.seg [data-f=w]{--pc:var(--wc)}.seg [data-f=k]{--pc:var(--kc)}
+.btn:disabled{opacity:.45;cursor:default;filter:none}
+/* dialog Mulai sesi baru / Hapus sesi (di dalam aplikasi, bukan confirm() bawaan) */
+.rdbox{max-width:420px}.rdbox p{margin:6px 0;font-size:13px;line-height:1.55;color:var(--muted)}.rdbox .rdt{color:var(--text);font-weight:600;font-variant-numeric:tabular-nums}
+.rdbox .btns{justify-content:flex-end;flex-wrap:wrap;margin-top:14px}.rdbox .btns .btn{flex:none;min-width:96px}
+.rdlink{display:block;margin:8px 0 0;padding:0;border:0;background:none;color:var(--muted);font:inherit;font-size:12px;text-decoration:underline;cursor:pointer}.rdlink:hover{color:var(--text)}
 #rlive{color:var(--bad);font-weight:700;font-size:12px;animation:rblink 1.6s ease infinite}@keyframes rblink{50%{opacity:.35}}
-#rbody{flex:1;overflow:auto;padding:18px 20px 28px;display:flex;flex-direction:column;gap:14px}
-.rg{display:grid;gap:14px}.rg4{grid-template-columns:repeat(4,1fr)}.rg2{grid-template-columns:1fr 1fr}
+#rbody{flex:1;min-height:0;overflow:auto;padding:18px 20px 28px;display:flex;flex-direction:column;gap:14px}
+.rg{display:grid;gap:14px}.rg4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}.rg2{grid-template-columns:repeat(auto-fit,minmax(320px,1fr))}
 #rbody .card{margin:0}.kpi .lb{font-size:12px;color:var(--muted)}.kpi .vl{font-size:30px;font-weight:700;margin:4px 0 2px;line-height:1.1}.kpi .sb2{font-size:12px;color:var(--muted);line-height:1.5}
 .dy{color:var(--yc)}.dt{color:var(--tcl)}.dw{color:var(--wc)}.dk{color:var(--kc)}
 .kkopt{margin:10px 0 2px}.kkopt summary{cursor:pointer;font-size:12px;color:var(--muted)}.kkopt input{width:100%;margin-top:6px}
@@ -292,8 +310,8 @@ table.rt{width:100%;border-collapse:collapse;font-size:13px}.rt th{text-align:le
 .rbar{height:6px;border-radius:3px;background:var(--acc);opacity:.75;min-width:2px}
 .rl{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-bottom:1px solid var(--line)}.rl:last-child{border-bottom:0}.rl span:first-child{color:var(--muted)}.rl b{font-variant-numeric:tabular-nums}
 .rl img{width:14px;height:14px;vertical-align:-2px;margin-right:6px}
-.rhead #rflt{min-width:150px;max-width:200px} /* v15.3.5: filter platform laporan + baris aktivitas yang bisa diklik */
-.rl.clk{cursor:pointer;user-select:none}.rl.clk:hover span:first-child{color:var(--text)}
+/* v15.3.5: baris aktivitas yang bisa diklik */
+.rl.clk{width:100%;margin:0;border:0;border-bottom:1px solid var(--line);border-radius:0;background:transparent;color:inherit;font:inherit;text-align:left;cursor:pointer;user-select:none}.rl.clk:hover{background:var(--grey-a14)}.rl.clk:hover span:first-child{color:var(--text)}.rl.clk:last-child{border-bottom:0}
 .evl{max-height:220px;overflow:auto;margin:2px 0 6px 12px;padding-left:10px;border-left:2px solid var(--line)}.evl .rl span:first-child{color:var(--text)}.evl .rl b{color:var(--muted);font-weight:500}
 #evm{position:fixed;inset:0;z-index:60;background:var(--black-a55);display:flex;align-items:center;justify-content:center;padding:20px}
 #evm .evw{width:min(460px,100%);max-height:80vh;display:flex;flex-direction:column;background:var(--winbg);border:1px solid var(--line);border-radius:var(--rad-c);box-shadow:none;color:var(--text)}
@@ -493,3 +511,7 @@ h1,h2,h3{text-wrap:balance}
 .portrow:focus-within{outline:2px solid var(--acc);outline-offset:-1px}
 .portrow span{padding:9px 4px 9px 12px;opacity:.65;white-space:nowrap;user-select:none}
 #panel .portrow input[type=number]{flex:1;min-width:0;border:0;outline:0;background:transparent;color:inherit;font:inherit;padding:9px 12px 9px 0}
+
+/* ===== v1.1.12: Dashboard dan jendela pengaturan = datar, sudut kecil (tanpa kaca/blur, tanpa lengkung besar). Chat Dock dan overlay OBS tidak ikut berubah. ===== */
+body.th-spatial:is(.settings,.tplwin,.addwin,.reportwin){--winbg:#0e1214;--card-bg:#151b1f;--line:#26323a;--ctl-bg:#0b0f11;--ctl-line:#26323a;--btn2:#232d33;--blur:none;--sh-card:none;--rad:6px;--rad-c:4px}
+body:is(.settings,.tplwin,.addwin,.reportwin) :is(.fab,.apv,.portrow,.addbtn){border-radius:var(--rad)}

@@ -116,7 +116,14 @@
   </div>
 </div>
 <div id="rep">
-  <div class="rhead"><select id="rsess"></select><select id="rflt" title="Tampilkan laporan untuk satu platform saja"><option value="all">Semua platform</option><option value="y">YouTube</option><option value="t">TikTok</option><option value="w">Twitch</option><option value="k">Kick</option></select><span id="rlive" hidden>&#9679; LIVE</span><span class="sp"></span><button class="btn b3 sm" id="rnew" title="Akhiri sesi sekarang dan mulai hitung dari nol">Mulai sesi baru</button><button class="btn b4 sm" id="rdel" hidden>Hapus sesi ini</button></div>
+  <div class="rhead">
+    <div class="rrow">
+      <div class="rsw"><button type="button" id="rsb" class="rsb" aria-haspopup="listbox" aria-expanded="false" title="Pilih sesi laporan yang mau dilihat"><span id="rsl">Memuat&hellip;</span><svg class="chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button><div id="rsm" class="rsm" role="listbox" hidden></div></div>
+      <span id="rlive" hidden>&#9679; LIVE</span><span class="sp"></span>
+      <button class="btn b3 sm" id="rnew" type="button" title="Akhiri sesi sekarang dan mulai hitung dari nol">Mulai sesi baru</button><button class="btn b4 sm" id="rdel" type="button" title="Hapus laporan sesi">Hapus sesi&hellip;</button>
+    </div>
+    <div class="rrow"><span class="rfl">Platform</span><div id="rflt" class="seg" role="group" aria-label="Tampilkan laporan untuk satu platform saja"><button type="button" data-f="all">Semua</button><button type="button" data-f="y">YouTube</button><button type="button" data-f="t">TikTok</button><button type="button" data-f="w">Twitch</button><button type="button" data-f="k">Kick</button></div></div>
+  </div>
   <div id="rbody"><div class="hint">Memuat laporan&hellip;</div></div>
 </div>
 <div id="tpl">
@@ -154,6 +161,7 @@
   <div id="cfList"></div>
   <div class="hint no" id="cfMsg"></div>
   <div class="btns"><button class="btn b4 sm" id="cfStay" style="margin-right:auto">Tetap di sini</button><button class="btn b2 sm" id="cfDiscard">Buang</button><button class="btn b1 sm" id="cfApply">Terapkan</button></div></div></div>
+<div id="rdlg" class="avm" hidden><div class="avbox rdbox" role="dialog" aria-modal="true" aria-labelledby="rdT"><h3 id="rdT"></h3><div id="rdB"></div><div class="btns" id="rdF"></div></div></div>
 <div id="avmodal" class="avm" hidden><div class="avbox"><h3>Port yang sebaiknya dihindari</h3>
   <div id="avlist"></div>
   <div class="btns"><button class="btn b1 sm" id="avclose">Tutup</button></div></div></div>

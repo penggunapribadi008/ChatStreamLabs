@@ -1151,7 +1151,7 @@ function drawRep(r){
   const X1=one?one[3]:T,nowV=one?one[4]:nT,tag=one?'<span class="'+one[2]+'">'+one[1]+'</span>':'';
   // baris yang bisa diklik: buka/tutup daftar rincian (siapa + kapan). Yang dihitung saja (like, chat, penonton bergabung) sengaja tidak bisa diklik.
   const vsn=q=>fmt((EV[q+'.vs']||[]).length);
-  const rc=(a,b,key)=>'<div class="rl clk" data-ev="'+key+'"><span>&#9656; '+a+'</span><b>'+b+'</b></div>';
+  const rc=(a,b,key)=>'<button type="button" class="rl clk" data-ev="'+key+'"><span>&#9656; '+a+'</span><b>'+b+'</b></button>';
   const ico=q=>'<img src="'+RF_IMG[q]+'" alt="" class="rpi">';
   const chatCard=q=>{const cnt=C[q],mins=r.dur/60000,pc=C.peakBy&&C.peakBy[q],tp=({y:C.topY,t:C.topT,w:C.topW,k:C.topK})[q];
     return '<div class="card"><h3>'+ico(q)+'Chat &middot; '+RF_NM[q]+'</h3>'+rl('Total pesan',fmt(cnt))+rl('Orang yang chat',fmt(C['u'+q]))+rl('Rata-rata per menit',fmt(mins>=1?+(cnt/mins).toFixed(1):cnt))+rl('Paling ramai',pc?fmt(pc.v)+' pesan/menit &middot; '+hhmm(pc.t):'-')
@@ -1176,22 +1176,65 @@ function drawRep(r){
      :'<div class="rg rg2">'+vis.map(p=>chatCard(p[0])).join('')+'</div>'+(acts?'<div class="rg rg2">'+acts+'</div>':''));
   chartHover(r);evFill();}
 function initReport(emb){
-  let sel='cur',busy=false,lastTxt='';const dd=$('rsess');
+  // v1.1.12: tanpa <select> dan tanpa confirm() bawaan. Daftar sesi = menu buatan sendiri, filter platform = tombol langsung, dialog Mulai/Hapus = kotak di dalam aplikasi
+  // (confirm() bawaan tidak bisa diandalkan di Tauri: plugin dialog membajaknya dan halaman localhost tidak punya izin IPC).
+  let sel='cur',busy=false,lastTxt='',hold=false,items=[],menuSig='';
+  const sb=$('rsb'),sl=$('rsl'),sm=$('rsm'),fl=$('rflt'),bn=$('rnew'),bd=$('rdel');
   const lab=x=>new Date(x.start).toLocaleString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})+' \u00b7 '+fdur((x.end||Date.now())-x.start)+(x.peak?' \u00b7 puncak '+fmt(x.peak.v):'')+(x.live?' (berjalan)':'');
+  // ---- menu pilih sesi
+  const menuClose=()=>{sm.hidden=true;sb.setAttribute('aria-expanded','false');};
+  const menuFill=()=>{menuSig=items.map(x=>x.id+(x.id===sel?'*':'')).join(',');
+    sm.innerHTML=items.length?items.map(x=>'<button type="button" role="option" class="rso'+(x.id===sel?' on':'')+'" data-id="'+esc(x.id)+'" aria-selected="'+(x.id===sel)+'"><span>'+esc(lab(x))+'</span>'+(x.live?'<em>LIVE</em>':'')+'</button>').join(''):'<div class="hint">Belum ada sesi.</div>';};
+  sb.onclick=e=>{e.stopPropagation();if(!sm.hidden){menuClose();return;}menuFill();sm.hidden=false;sb.setAttribute('aria-expanded','true');};
+  sm.onclick=e=>{const t=e.target.closest&&e.target.closest('.rso');if(!t)return;sel=t.dataset.id;menuClose();lastTxt='';load();};
+  document.addEventListener('click',e=>{if(!sm.hidden&&!(e.target.closest&&e.target.closest('.rsw')))menuClose();});
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!sm.hidden){menuClose();sb.focus();}});
+  // ---- dialog di dalam aplikasi: ask(judul, html, [[teks, nilai, kelas tombol]]) -> nilai tombol yang ditekan, atau null kalau dibatalkan (Esc / klik luar)
+  const dlg=$('rdlg');let dRes=null;
+  const dClose=v=>{dlg.hidden=true;const f=dRes;dRes=null;if(f)f(v);};
+  const ask=(title,html,acts)=>new Promise(res=>{if(dRes)dClose(null);dRes=res;$('rdT').textContent=title;$('rdB').innerHTML=html;
+    $('rdF').innerHTML=acts.map(a=>'<button type="button" class="btn sm '+(a[2]||'b4')+'" data-v="'+esc(a[1])+'">'+esc(a[0])+'</button>').join('');dlg.hidden=false;const f=$('rdF').querySelector('.btn');if(f)f.focus();});
+  dlg.onclick=e=>{const b=e.target.closest&&e.target.closest('[data-v]');if(b){dClose(b.dataset.v);return;}if(e.target===dlg)dClose(null);};
+  document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!dlg.hidden)dClose(null);});
+  // ---- ambil data
   async function load(){if(busy||document.hidden)return;busy=true;
-    try{const tx=await(await fetch('/analytics?id='+encodeURIComponent(sel))).text();if(tx===lastTxt){busy=false;return;}lastTxt=tx;const r=JSON.parse(tx);
-      if(document.activeElement!==dd){dd.innerHTML=r.list.map(x=>'<option value="'+x.id+'">'+esc(lab(x))+'</option>').join('');}
-      const id=r.report?r.report.id:'';if(id){sel=id;dd.value=id;}
-      $('rlive').hidden=!(r.report&&r.report.live);$('rdel').hidden=!(r.report&&!r.report.live);
-      const ph=$('rbody').scrollTop;drawRep(r.report);$('rbody').scrollTop=ph;
+    try{const tx=await(await fetch('/analytics?id='+encodeURIComponent(sel))).text();if(tx===lastTxt||hold){busy=false;return;}lastTxt=tx;const r=JSON.parse(tx),rp=r.report;
+      items=r.list||[];
+      if(!rp&&items.length&&sel!=='cur'){sel='cur';lastTxt='';busy=false;return load();} // sesi yang dipilih sudah tidak ada (mis. dihapus): kembali ke sesi terbaru
+      if(rp&&rp.id)sel=rp.id;
+      const cur=items.find(x=>x.id===sel);sl.textContent=cur?lab(cur):'Belum ada sesi';
+      $('rlive').hidden=!(rp&&rp.live);bd.disabled=!items.length;
+      if(!sm.hidden){const sg=items.map(x=>x.id+(x.id===sel?'*':'')).join(',');if(sg!==menuSig)menuFill();}
+      const ph=$('rbody').scrollTop;drawRep(rp);$('rbody').scrollTop=ph;
     }catch{}busy=false;}
-  dd.onchange=()=>{sel=dd.value;dd.blur();load();};
-  // v15.3.5: filter platform + klik baris aktivitas (buka/tutup rincian)
-  const fl=$('rflt'),redraw=()=>{if(!lastRep)return;const ph=$('rbody').scrollTop;drawRep(lastRep);$('rbody').scrollTop=ph;};
-  fl.value=repF;fl.onchange=()=>{repF=RF_OK.includes(fl.value)?fl.value:'all';try{localStorage.setItem('rflt',repF)}catch{};redraw();};
+  // tunggu pengambilan data yang sedang jalan, lalu ambil ulang (dipakai setelah Mulai/Hapus supaya tampilan langsung benar)
+  const refresh=async()=>{for(let i=0;i<30&&busy;i++)await new Promise(r=>setTimeout(r,100));lastTxt='';await load();};
+  // saat tombol mouse ditekan di dalam laporan, jangan gambar ulang isi (klik bisa hilang kalau elemennya diganti di antara tekan dan lepas)
+  $('rbody').addEventListener('mousedown',()=>{hold=true;});
+  addEventListener('mouseup',()=>{setTimeout(()=>{hold=false;},0);});addEventListener('blur',()=>{hold=false;});
+  // ---- filter platform + klik baris aktivitas (buka rincian)
+  const redraw=()=>{if(!lastRep)return;const ph=$('rbody').scrollTop;drawRep(lastRep);$('rbody').scrollTop=ph;};
+  const flSet=()=>fl.querySelectorAll('button[data-f]').forEach(x=>{const on=x.dataset.f===repF;x.classList.toggle('on',on);x.setAttribute('aria-pressed',on?'true':'false');});
+  flSet();
+  fl.onclick=e=>{const x=e.target.closest&&e.target.closest('button[data-f]');if(!x)return;repF=RF_OK.includes(x.dataset.f)?x.dataset.f:'all';try{localStorage.setItem('rflt',repF)}catch{};flSet();redraw();};
   $('rbody').addEventListener('click',e=>{const t=e.target.closest&&e.target.closest('.clk');if(!t)return;const k=t.dataset.ev,sp=t.querySelector('span');evOpen(k,(RF_NM[k[0]]?RF_NM[k[0]]+' \u00b7 ':'')+(sp?sp.textContent.replace(/^\u25B8\s*/,''):''));});
-  $('rnew').onclick=async()=>{if(!confirm('Akhiri sesi sekarang dan mulai sesi baru dari nol?\n\nSesi yang diakhiri tetap tersimpan di daftar.'))return;await post('/analytics-new');sel='cur';load();};
-  $('rdel').onclick=async()=>{if(!confirm('Hapus laporan sesi ini?'))return;await post('/analytics-del',{id:sel});sel='cur';load();};
+  // ---- Mulai sesi baru
+  bn.onclick=async()=>{
+    if(!items.some(x=>x.live)){await ask('Belum ada sesi yang berjalan','<p>Sesi baru mulai sendiri begitu ada penonton atau chat masuk, jadi tidak perlu ditekan.</p>',[['Tutup','no','b1']]);return;}
+    const v=await ask('Mulai sesi baru?','<p>Sesi yang sedang berjalan diakhiri, lalu hitungan mulai dari nol.</p><p>Sesi yang diakhiri tetap tersimpan di daftar.</p>',[['Batal','no','b4'],['Mulai sesi baru','yes','b1']]);
+    if(v!=='yes')return;await post('/analytics-new');sel='cur';await refresh();};
+  // ---- Hapus sesi
+  const delIds=async ids=>{for(const id of ids)await post('/analytics-del',{id});sel='cur';await refresh();};
+  bd.onclick=async()=>{
+    const ended=items.filter(x=>!x.live),cur=items.find(x=>x.id===sel),n=ended.length;
+    const allBtn=n>1?'<button type="button" class="rdlink" data-v="all">Hapus semua '+n+' sesi yang sudah selesai</button>':'';
+    let v;
+    if(cur&&!cur.live)v=await ask('Hapus laporan sesi ini?','<p class="rdt">'+esc(lab(cur))+'</p><p>Laporan sesi ini dihapus permanen dan tidak bisa dikembalikan.</p>'+allBtn,[['Batal','no','b4'],['Hapus sesi ini','one','b2']]);
+    else if(n)v=await ask('Sesi ini masih berjalan','<p>Sesi yang sedang berjalan tidak bisa dihapus. Untuk menghapus sesi lama, pilih dulu sesi itu dari daftar di kiri atas, lalu tekan Hapus sesi lagi.</p>'+(n>1?'':'<p class="rdt">'+esc(lab(ended[0]))+'</p>'),n>1?[['Tutup','no','b4'],['Hapus semua '+n+' sesi selesai','all','b2']]:[['Tutup','no','b4'],['Hapus sesi ini','one1','b2']]);
+    else{await ask('Tidak ada sesi untuk dihapus','<p>Hanya ada sesi yang sedang berjalan, dan itu tidak bisa dihapus.</p>',[['Tutup','no','b1']]);return;}
+    if(v==='one')return delIds([sel]);
+    if(v==='one1')return delIds([ended[0].id]);
+    if(v==='all'){const w=await ask('Hapus semua sesi selesai?','<p>'+n+' sesi yang sudah selesai akan dihapus permanen. Sesi yang sedang berjalan tidak ikut dihapus.</p>',[['Batal','no','b4'],['Hapus '+n+' sesi','yes','b2']]);if(w==='yes')return delIds(ended.map(x=>x.id));}};
   if(!emb){bootDone();load();}
   setInterval(()=>{if(!emb||curTab==='r')load();},5000);
   return load;}
