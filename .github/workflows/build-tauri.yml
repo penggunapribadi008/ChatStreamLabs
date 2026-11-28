@@ -6,10 +6,20 @@ name: Build Tauri (installer ChatStream Labs)
 # Tag v<versi> = GitHub Release PRA-RILIS (prerelease) berjudul "ChatStream Labs v<versi>", asetnya HANYA installer .exe
 #   (+ "Source code" .zip dan .tar.gz yang dibuat GitHub sendiri). Tidak ada berkas .sha256: SHA-256 ada di catatan rilis dan di 'digest' aset.
 # Rilis inilah yang dibaca auto-update di aplikasi (pra-rilis ikut dibaca). Repo harus PUBLIC agar aplikasi bisa membacanya tanpa login.
+# v1.1.12: OTOMATIS. Setiap push ke main (selain yang hanya mengubah berkas .md) = build + pra-rilis baru, tanpa tombol dan tanpa tag manual.
+#   Nomor versi: pakai versi di package.json; kalau tag v<versi> itu sudah ada di GitHub, naik otomatis (patch +1) sampai ketemu yang belum dipakai.
+#   Penaikan ini HANYA di mesin build (tidak di-commit ke repo), jadi berkas di repo tidak berubah sendiri. Mau lompat versi (mis. 1.2.0): naikkan sendiri
+#   lewat `node scripts/version.js set 1.2.0`, maka rilis berikutnya mulai dari sana. Cara lama (push tag v<versi>) masih bisa.
 on:
   push:
+    branches: [main]
+    paths-ignore: ['**.md']
     tags: ['v*']
   workflow_dispatch:
+
+concurrency:
+  group: rilis-chatstream
+  cancel-in-progress: false
 
 permissions:
   contents: write
@@ -19,6 +29,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -28,6 +40,21 @@ jobs:
       # --ignore-scripts: tidak mengunduh binary Electron (tidak dipakai di sini)
       - name: Pasang dependensi
         run: npm ci --ignore-scripts
+
+      # Push ke main: cari nomor versi yang belum dipakai tag mana pun, lalu samakan di semua berkas (hanya di mesin build).
+      - name: Tentukan versi rilis
+        shell: pwsh
+        run: |
+          git fetch --tags --force
+          $v = (Get-Content package.json -Raw | ConvertFrom-Json).version
+          if ($env:GITHUB_REF -like 'refs/heads/*') {
+            while (git tag -l "v$v") {
+              $p = $v.Split('.'); $v = "{0}.{1}.{2}" -f $p[0], $p[1], ([int]$p[2] + 1)
+            }
+            node scripts/version.js set $v
+          }
+          "VERSI_RILIS=$v" | Out-File -Append -Encoding utf8 $env:GITHUB_ENV
+          "Versi rilis: $v"
 
       - name: Cek versi sama di semua tempat
         run: node scripts/version.js check
@@ -89,11 +116,13 @@ jobs:
           "{0:N1} MB (exe aplikasi saja)" -f ((Get-Item shell/src-tauri/target/release/chatstream-labs.exe).Length / 1MB)
 
       # v1.1.8: tidak ada upload artifact lagi (kuota habis); installer langsung jadi aset pra-rilis.
-      - name: Buat pra-rilis (hanya untuk tag)
-        if: startsWith(github.ref, 'refs/tags/v')
+      - name: Buat pra-rilis (push ke main atau tag; bukan Run workflow manual)
+        if: github.event_name != 'workflow_dispatch'
         uses: softprops/action-gh-release@v2
         with:
-          name: ChatStream Labs ${{ github.ref_name }}
+          tag_name: v${{ env.VERSI_RILIS }}
+          target_commitish: ${{ github.sha }}
+          name: ChatStream Labs v${{ env.VERSI_RILIS }}
           prerelease: true
           body_path: dist/catatan-rilis.md
           files: dist/*.exe
